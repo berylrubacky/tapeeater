@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">TapeEater</string>
+    <string name="vinyl">Vinyl</string>
+    <string name="cassette">Cassette</string>
+    <string name="cd">CD</string>
+    <string name="minidisc">Minidisc</string>
 </resources>
