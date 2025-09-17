@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.compose.compiler)
+    kotlin("plugin.serialization") version "2.0.21"
 }
 
 android {
@@ -54,6 +55,8 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.constraintlayout.compose)
+    implementation (libs.androidx.navigation.compose)
+    implementation(libs.jetbrains.kotlinx.serialization.json)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     debugImplementation(libs.androidx.ui.tooling)
     androidTestImplementation(libs.androidx.ui.test.junit4)

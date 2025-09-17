@@ -17,11 +17,14 @@ class MediaListViewmodel : ViewModel() {
         Media(1, "How To Drive A Bus", 0),
         Media(2, "Furfag", 2),
         Media(3, "Log off and Go Outside!", 3),
-        Media(4, "Swear I Saw Your Mouth Move", 2),
+        Media(4, "The Circus Egotistica; or, How I Spent Most of my Life as a Lost Cause", 2),
         Media(5, "Sutured Self", 3),
         Media(6, "All These Faces", 3),
         Media(7, "Partners", 3)
     )
+
+    private val _sortValue = MutableStateFlow(0)
+    val sortValue = _sortValue.asStateFlow()
 
     private val _filterValue = MutableStateFlow(-1)
     val filterValue = _filterValue.asStateFlow()
@@ -64,5 +67,9 @@ class MediaListViewmodel : ViewModel() {
         } else {
             _filterValue.value = filter
         }
+    }
+
+    fun onSortChange(sort: Int) {
+        _sortValue.value = sort
     }
 }

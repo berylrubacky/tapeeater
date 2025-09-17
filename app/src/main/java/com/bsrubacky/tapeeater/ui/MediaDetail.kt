@@ -1,15 +1,153 @@
 package com.bsrubacky.tapeeater.ui
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ShapeDefaults
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
+import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.bsrubacky.tapeeater.R
+import com.bsrubacky.tapeeater.viewmodels.MediaDetailViewmodel
+import kotlinx.serialization.Serializable
+import java.text.SimpleDateFormat
+import java.util.Locale
+
+@Serializable
+data class MediaDetail(val id: Int)
 
 @Composable
-fun MediaDetail(){
+fun MediaDetailScreen(){
+    val viewmodel = viewModel<MediaDetailViewmodel>()
+    val media by viewmodel.media.collectAsState()
+    val hasScrobbles by viewmodel.hasScrobbles.collectAsState()
+    val hasTracks by viewmodel.hasTracks.collectAsState()
 
+    Scaffold(floatingActionButton = {
+        FloatingActionButton(onClick = {viewmodel.scrobbleMedia()}) {
+            Icon(painterResource(R.drawable.button_upload), "Scrobble")
+        }
+    }) { paddingValues ->
+        Box(Modifier.padding(paddingValues).fillMaxHeight()){
+            ConstraintLayout(Modifier.padding(10.dp)) {
+                val (header, info) = createRefs()
+                ConstraintLayout(
+                    Modifier.fillMaxWidth().background(
+                        MaterialTheme.colorScheme.inversePrimary,
+                        shape = ShapeDefaults.Medium
+                    ).padding(10.dp).zIndex(1f).constrainAs(header){}
+                ) {
+                    val (type, name) = createRefs()
+                    val icon = when(media.type){
+                        0 -> R.drawable.vinyl
+                        1 -> R.drawable.cassette
+                        2 -> R.drawable.cd
+                        3 -> R.drawable.minidisc
+                        else -> R.drawable.cd
+                    }
+                    val iconName = when(media.type){
+                        0 -> R.string.vinyl
+                        1 -> R.string.cassette
+                        2 -> R.string.cd
+                        3 -> R.string.minidisc
+                        else -> R.string.cd
+                    }
+                    Image(
+                        painterResource(icon),
+                        contentDescription = stringResource(iconName),
+                        modifier = Modifier.padding(5.dp).width(100.dp).constrainAs(type) {
+                            start.linkTo(parent.start)
+                            top.linkTo(parent.top)
+                        },
+                        colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary)
+                    )
+                    Text(
+                        media.name,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontSize = 30.sp,
+                        lineHeight = 30.sp,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth(.7f).constrainAs(name) {
+                            start.linkTo(type.end)
+                            end.linkTo(parent.end)
+                            top.linkTo(parent.top)
+                            bottom.linkTo(parent.bottom)
+                        })
+                }
+                LazyRow(horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxWidth().background(
+                    MaterialTheme.colorScheme.secondary,
+                    shape = ShapeDefaults.Small
+                ).padding(top = 25.dp, bottom = 5.dp).constrainAs(info){
+                    top.linkTo(header.bottom, (-20).dp)
+                }) {
+                    item{
+                        Text("${media.plays} Scrobbles", color = MaterialTheme.colorScheme.onSecondary, modifier = Modifier.animateItem())
+                    }
+                    if(hasTracks){
+                        item {
+                            Icon(
+                                painterResource(R.drawable.icon_time),
+                                "Length",
+                                tint = MaterialTheme.colorScheme.onSecondary,
+                                modifier = Modifier.animateItem().padding(end=5.dp)
+                            )
+                            Text(
+                                "1:17:48",
+                                color = MaterialTheme.colorScheme.onSecondary,
+                                modifier = Modifier.animateItem()
+                            )
+                        }
+                    }
+                    if(hasScrobbles){
+                        item{
+                            Icon(painterResource(R.drawable.icon_music_history),"Last Scrobbled", tint = MaterialTheme.colorScheme.onSecondary,
+                                modifier = Modifier.animateItem().padding(end=5.dp))
+                            val sdf = SimpleDateFormat("EEE hh:mm a", Locale.getDefault())
+                            Text(sdf.format(media.lastPlayed),color = MaterialTheme.colorScheme.onSecondary, modifier = Modifier.animateItem())
+                        }
+                    }
+                }
+                LazyColumn{
+
+                }
+            }
+        }
+    }
 }
 
 @Preview
 @Composable
 fun MediaDetailPreview(){
-    MediaDetail()
+    val navController = rememberNavController()
+    TapeEaterTheme {
+        NavHost(navController, startDestination = MediaDetail(4)){
+            composable<MediaDetail> { MediaDetailScreen() }
+        }
+    }
 }

@@ -1,15 +1,15 @@
 package com.bsrubacky.tapeeater.ui
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandIn
+import androidx.compose.animation.shrinkOut
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.DropdownMenu
@@ -32,7 +32,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -45,10 +44,15 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bsrubacky.tapeeater.R
 import com.bsrubacky.tapeeater.ui.menu.FilterSortItem
 import com.bsrubacky.tapeeater.viewmodels.MediaListViewmodel
+import kotlinx.serialization.Serializable
+
+
+@Serializable
+object MediaList
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MediaListScreen() {
+fun MediaListScreen(navToDetail: (Int) -> Unit) {
 
     val viewmodel = viewModel<MediaListViewmodel>()
 
@@ -56,12 +60,11 @@ fun MediaListScreen() {
     val filterValue by viewmodel.filterValue.collectAsState()
     val mediaList by viewmodel.mediaList.collectAsState()
     var filtersExpanded by remember { mutableStateOf(false) }
-    var sortExpanded by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
             ConstraintLayout(Modifier.fillMaxWidth()) {
-                val (search, settings,filters) = createRefs()
+                val (search, settings, filters) = createRefs()
                 val searchColors = SearchBarDefaults.colors()
                 SearchBar(
                     inputField = {
@@ -73,15 +76,40 @@ fun MediaListScreen() {
                             onExpandedChange = { expanded: Boolean -> },
                             colors = searchColors.inputFieldColors,
                             leadingIcon = {
-                                Icon(painterResource(R.drawable.button_search), "Search Media")
+                                IconButton(onClick = { viewmodel.onSearchTextChange("") }) {
+                                    AnimatedVisibility(
+                                        searchText.isBlank(),
+                                        enter = expandIn(expandFrom = Alignment.Center),
+                                        exit = shrinkOut(shrinkTowards = Alignment.Center)
+                                    ) {
+                                        Icon(
+                                            painterResource(R.drawable.button_search),
+                                            "Search Media"
+                                        )
+                                    }
+                                    AnimatedVisibility(
+                                        !searchText.isBlank(),
+                                        enter = expandIn(expandFrom = Alignment.Center),
+                                        exit = shrinkOut(shrinkTowards = Alignment.Center)
+                                    ) {
+                                        Icon(
+                                            painterResource(R.drawable.button_close), "Clear Search"
+                                        )
+                                    }
+                                }
                             },
                             trailingIcon = {
+                                ConstraintLayout {
+                                    val (filter, sort) = createRefs()
                                     IconButton(
                                         onClick = { filtersExpanded = true },
                                         colors = if (filterValue == -1) {
                                             IconButtonDefaults.iconButtonColors()
                                         } else {
                                             IconButtonDefaults.filledIconButtonColors()
+                                        },
+                                        modifier = Modifier.constrainAs(filter) {
+                                            end.linkTo(sort.start)
                                         }
                                     ) {
                                         Icon(
@@ -89,7 +117,24 @@ fun MediaListScreen() {
                                             "Filter Media"
                                         )
                                     }
+                                    IconButton(
+                                        onClick = { filtersExpanded = true },
+                                        colors = if (filterValue == -1) {
+                                            IconButtonDefaults.iconButtonColors()
+                                        } else {
+                                            IconButtonDefaults.filledIconButtonColors()
+                                        },
+                                        modifier = Modifier.constrainAs(sort) {
+                                            end.linkTo(parent.end)
+                                        }
+                                    ) {
+                                        Icon(
+                                            painterResource(R.drawable.button_sort),
+                                            "Filter Media"
+                                        )
+                                    }
                                 }
+                            }
 
                         )
 
@@ -111,10 +156,10 @@ fun MediaListScreen() {
                             bottom.linkTo(parent.bottom)
                         }
                 )
-                Box(modifier = Modifier.constrainAs(filters){
+                Box(modifier = Modifier.constrainAs(filters) {
                     end.linkTo(search.end)
                     top.linkTo(search.bottom)
-                }){
+                }) {
                     DropdownMenu(
                         expanded = filtersExpanded,
                         onDismissRequest = { filtersExpanded = false }
@@ -156,42 +201,14 @@ fun MediaListScreen() {
                             viewmodel.onFilterChange(3)
                         }
                     }
-                    DropdownMenu(
-                        expanded = sortExpanded,
-                        onDismissRequest = { sortExpanded = false }
-                    ) {
-                        FilterSortItem(
-                            painterResource(R.drawable.button_asc),
-                            "A-Z",
-                            filterValue == 0
-                        ) {
-                        }
-                        FilterSortItem(
-                            painterResource(R.drawable.button_dsc),
-                            "A-Z",
-                            filterValue == 0
-                        ) {
-                        }
-                        FilterSortItem(
-                            painterResource(R.drawable.button_asc),
-                            "Date",
-                            filterValue == 0
-                        ) {
-                        }
-                        FilterSortItem(
-                            painterResource(R.drawable.button_dsc),
-                            "Date",
-                            filterValue == 0
-                        ) {
-                        }
-                    }
                 }
-                IconButton(onClick = {}, modifier = Modifier
-                    .padding(5.dp)
-                    .constrainAs(settings) {
-                        end.linkTo(parent.end)
-                        bottom.linkTo(search.bottom, 5.dp)
-                    }) {
+                IconButton(
+                    onClick = {}, modifier = Modifier
+                        .padding(5.dp)
+                        .constrainAs(settings) {
+                            end.linkTo(parent.end)
+                            bottom.linkTo(search.bottom, 5.dp)
+                        }) {
                     Icon(painterResource(R.drawable.button_settings), "")
                 }
             }
@@ -208,37 +225,65 @@ fun MediaListScreen() {
                 .fillMaxHeight()
         ) {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(0.dp)) {
-                items(mediaList, key = {it.id}) { media ->
-                    val icon = when(media.type){
+                items(mediaList, key = { it.id }) { media ->
+                    val icon = when (media.type) {
                         0 -> R.drawable.vinyl
                         1 -> R.drawable.cassette
                         2 -> R.drawable.cd
                         3 -> R.drawable.minidisc
                         else -> R.drawable.cd
                     }
-                    val iconName = when(media.type){
+                    val iconName = when (media.type) {
                         0 -> R.string.vinyl
                         1 -> R.string.cassette
                         2 -> R.string.cd
                         3 -> R.string.minidisc
                         else -> R.drawable.cd
                     }
-                    Box(Modifier
-                        .padding(horizontal = 10.dp, vertical = 2.dp)
-                        .fillMaxWidth()
-                        .height(50.dp).animateItem()){
-                        Icon(painterResource(icon), stringResource(iconName), modifier = Modifier
-                            .align(Alignment.CenterStart)
-                            .width(50.dp)
-                            .padding(start = 5.dp),tint = MaterialTheme.colorScheme.primary)
-                        Text(text= media.name, modifier = Modifier
-                            .align(Alignment.Center)
-                            .fillMaxWidth(.80f)
-                            .padding(start = 20.dp), overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center, fontSize = 23.sp)
-                        Icon(painterResource(R.drawable.button_upload),"Scrobble", modifier = Modifier
-                            .align(Alignment.CenterEnd)
-                            .padding(end = 5.dp))
-                        HorizontalDivider(modifier = Modifier.align(Alignment.BottomCenter))
+                    ConstraintLayout(
+                        Modifier
+                            .fillMaxWidth()
+                            .height(45.dp)
+                            .animateItem()
+                    ) {
+                        val (click, scrobble, divider) = createRefs()
+                        Box(Modifier
+                            .clickable {
+                                navToDetail(media.id)
+                            }
+                            .constrainAs(click) {
+                                start.linkTo(parent.start)
+                                end.linkTo(scrobble.start)
+                            }
+                            .fillMaxWidth(.85f)) {
+                            Icon(
+                                painterResource(icon),
+                                stringResource(iconName),
+                                modifier = Modifier
+                                    .align(Alignment.CenterStart),
+                                tint = MaterialTheme.colorScheme.primary,
+
+                                )
+                            Text(
+                                text = media.name,
+                                modifier = Modifier
+                                    .fillMaxWidth(.85f)
+                                    .align(Alignment.CenterEnd),
+                                overflow = TextOverflow.Ellipsis,
+                                textAlign = TextAlign.Center,
+                                fontSize = 23.sp
+                            )
+                        }
+                        IconButton(
+                            onClick = {}, modifier = Modifier
+                                .constrainAs(scrobble) {
+                                    end.linkTo(parent.end)
+                                }) {
+                            Icon(painterResource(R.drawable.button_upload), "Scrobble")
+                        }
+                        HorizontalDivider(modifier = Modifier.constrainAs(divider) {
+
+                        })
                     }
                 }
             }
@@ -252,6 +297,6 @@ fun MediaListScreen() {
 @Preview
 fun MediaListScreenPreview() {
     TapeEaterTheme {
-        MediaListScreen()
+        MediaListScreen { int -> }
     }
 }

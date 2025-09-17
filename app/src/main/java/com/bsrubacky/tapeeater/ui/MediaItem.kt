@@ -36,7 +36,7 @@ fun MediaItem(media: Media){
         1 -> R.string.cassette
         2 -> R.string.cd
         3 -> R.string.minidisc
-        else -> R.drawable.cd
+        else -> R.string.cd
     }
     Box(Modifier
         .padding(horizontal = 10.dp, vertical = 2.dp)
