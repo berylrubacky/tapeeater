@@ -97,7 +97,7 @@ fun AddEditMediaDialog(
                             val textFieldState = rememberTextFieldState(media.name)
                             TextField(
                                 textFieldState,
-                                label = { Text("Media Name") },
+                                label = { Text(stringResource(R.string.media_name)) },
                                 modifier = Modifier.fillMaxWidth().padding(20.dp)
                             )
                             var type by remember { mutableIntStateOf(media.type) }
@@ -177,7 +177,7 @@ fun AddEditMediaDialog(
                                     {
                                         keyboardController?.hide()
                                         onDismissRequest() }
-                                ) { Text("Cancel") }
+                                ) { Text(stringResource(R.string.cancel)) }
                                 TextButton(
                                     {
                                         media.name = textFieldState.text.toString()
@@ -187,7 +187,7 @@ fun AddEditMediaDialog(
                                     },
                                     enabled = (type != -1 && !textFieldState.text.toString()
                                         .isEmpty())
-                                ) { Text("Save") }
+                                ) { Text(stringResource(R.string.save)) }
                             }
 
                         }

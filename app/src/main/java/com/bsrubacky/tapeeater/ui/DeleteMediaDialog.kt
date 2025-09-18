@@ -23,10 +23,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
+import com.bsrubacky.tapeeater.R
 import com.bsrubacky.tapeeater.database.entities.Media
 
 @OptIn(ExperimentalSharedTransitionApi::class)
@@ -77,8 +79,8 @@ fun DeleteMediaDialog(
                                     end.linkTo(parent.end)
                                 }
                         ) {
-                            Text("Delete Media?", fontSize = 25.sp, modifier = Modifier.padding(20.dp))
-                            Text("If you delete \"${media.name}\" it will disappear forever.",modifier = Modifier.padding(start = 20.dp,end=20.dp))
+                            Text(stringResource(R.string.delete_dialog_title), fontSize = 25.sp, modifier = Modifier.padding(20.dp))
+                            Text(stringResource(R.string.delete_dialog_prompt,media.name),modifier = Modifier.padding(start = 20.dp,end=20.dp))
                             Row(
                                 Modifier
                                     .align(Alignment.End)
@@ -87,12 +89,12 @@ fun DeleteMediaDialog(
                                 TextButton(
                                     {
                                         onDismissRequest() }
-                                ) { Text("Cancel") }
+                                ) { Text(stringResource(R.string.cancel)) }
                                 TextButton(
                                     {
                                         onConfirm(media)
                                     }
-                                ) { Text("Delete") }
+                                ) { Text(stringResource(R.string.delete)) }
                             }
                         }
                     }

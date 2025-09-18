@@ -43,6 +43,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -167,7 +168,7 @@ fun MediaDetailScreen(
                         }) {
                     item {
                         Text(
-                            "${media.plays} Scrobbles",
+                            pluralStringResource(R.plurals.scrobble,media.plays,media.plays),
                             color = MaterialTheme.colorScheme.onSecondary,
                             modifier = Modifier.animateItem()
                         )
@@ -176,7 +177,7 @@ fun MediaDetailScreen(
                         item {
                             Icon(
                                 painterResource(R.drawable.icon_time),
-                                "Length",
+                                stringResource(R.string.length),
                                 tint = MaterialTheme.colorScheme.onSecondary,
                                 modifier = Modifier
                                     .animateItem()
@@ -193,7 +194,7 @@ fun MediaDetailScreen(
                         item {
                             Icon(
                                 painterResource(R.drawable.icon_music_history),
-                                "Last Scrobbled",
+                                stringResource(R.string.last_scrobbled),
                                 tint = MaterialTheme.colorScheme.onSecondary,
                                 modifier = Modifier
                                     .animateItem()
@@ -238,7 +239,7 @@ fun MediaDetailScreen(
                         with(sharedTransitionScope) {
                             Icon(
                                 painterResource(R.drawable.button_delete),
-                                "Delete Media",
+                                stringResource(R.string.delete_media),
                                 modifier = Modifier.sharedBounds(
                                         rememberSharedContentState(key = "delete-media"),
                                 this@AnimatedVisibility,
@@ -255,7 +256,7 @@ fun MediaDetailScreen(
                             AnimatedVisibility(!editMediaDialog,enter = fadeIn() + scaleIn(),
                                 exit = fadeOut() + scaleOut()) {
                                 with(sharedTransitionScope) {
-                            Icon(painterResource(R.drawable.button_edit), "Edit Media",modifier = Modifier.sharedBounds(
+                            Icon(painterResource(R.drawable.button_edit), stringResource(R.string.edit_media),modifier = Modifier.sharedBounds(
                                 rememberSharedContentState(key = "add-media"),
                                 this@AnimatedVisibility,
                                 clipInOverlayDuringTransition = OverlayClip(RoundedCornerShape(16.dp))

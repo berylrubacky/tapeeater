@@ -1,8 +1,30 @@
 <resources>
     <string name="app_name">TapeEater</string>
+
+    <!--Type Strings-->
     <string name="vinyl">Vinyl</string>
     <string name="cassette">Cassette</string>
     <string name="cd">CD</string>
     <string name="minidisc">Minidisc</string>
-    <string name="clear">Clear</string>
+
+    <!--Search Strings-->
+    <string name="search_media">Search Media</string>
+    <string name="clear_search">Clear Search</string>
+    <string name="filter_media">Filter Media</string>
+    <string name="clear_filters">Clear Filters</string>
+    <string name="sort_media">Sort Media</string>
+
+    <!--Dialog Strings-->
+    <string name="media_name">Media Name</string>
+    <string name="delete_dialog_title">Delete Media?</string>
+    <string name="delete_dialog_prompt">If you delete "%1$s" it will disappear forever.</string>
+    <string name="cancel">Cancel</string>
+    <string name="save">Save</string>
+    <string name="delete">Delete</string>
+
+    <!--Detail Strings-->
+    <string name="length">Length</string>
+    <string name="last_scrobbled">Last Scrobbled</string>
+    <string name="edit_media">Edit Media</string>
+    <string name="delete_media">Delete Media</string>
 </resources>

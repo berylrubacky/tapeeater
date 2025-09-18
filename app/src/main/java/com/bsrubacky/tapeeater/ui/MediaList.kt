@@ -101,7 +101,7 @@ fun MediaListScreen(
                                     ) {
                                         Icon(
                                             painterResource(R.drawable.button_search),
-                                            "Search Media"
+                                            stringResource(R.string.search_media)
                                         )
                                     }
                                     AnimatedVisibility(
@@ -110,7 +110,8 @@ fun MediaListScreen(
                                         exit = shrinkOut(shrinkTowards = Alignment.Center)
                                     ) {
                                         Icon(
-                                            painterResource(R.drawable.button_close), "Clear Search"
+                                            painterResource(R.drawable.button_close),
+                                            stringResource(R.string.clear_search)
                                         )
                                     }
                                 }
@@ -131,7 +132,7 @@ fun MediaListScreen(
                                     ) {
                                         Icon(
                                             painterResource(R.drawable.button_filter),
-                                            "Filter Media"
+                                            stringResource(R.string.filter_media)
                                         )
                                     }
                                     IconButton(
@@ -147,7 +148,7 @@ fun MediaListScreen(
                                     ) {
                                         Icon(
                                             painterResource(R.drawable.button_sort),
-                                            "Filter Media"
+                                            stringResource(R.string.filter_media)
                                         )
                                     }
                                 }
@@ -184,7 +185,7 @@ fun MediaListScreen(
                         AnimatedVisibility(filterValue != -1) {
                             FilterSortItem(
                                 painterResource(R.drawable.button_filter_off),
-                                stringResource(R.string.clear)
+                                stringResource(R.string.clear_filters)
                             ) {
                                 viewmodel.onFilterChange(-1)
                             }
