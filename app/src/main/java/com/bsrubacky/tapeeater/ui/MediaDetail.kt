@@ -1,17 +1,34 @@
 package com.bsrubacky.tapeeater.ui
 
+import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.material3.FloatingActionButton
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FloatingToolbarDefaults
+import androidx.compose.material3.FloatingToolbarDefaults.ScreenOffset
+import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ShapeDefaults
@@ -19,6 +36,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
@@ -42,80 +63,124 @@ import java.util.Locale
 @Serializable
 data class MediaDetail(val id: Int)
 
+@OptIn(ExperimentalSharedTransitionApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun MediaDetailScreen(){
+fun MediaDetailScreen(
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope
+) {
     val viewmodel = viewModel<MediaDetailViewmodel>()
     val media by viewmodel.media.collectAsState()
     val hasScrobbles by viewmodel.hasScrobbles.collectAsState()
     val hasTracks by viewmodel.hasTracks.collectAsState()
 
-    Scaffold(floatingActionButton = {
-        FloatingActionButton(onClick = {viewmodel.scrobbleMedia()}) {
-            Icon(painterResource(R.drawable.button_upload), "Scrobble")
-        }
-    }) { paddingValues ->
-        Box(Modifier.padding(paddingValues).fillMaxHeight()){
+    var editMediaDialog by remember { mutableStateOf(false) }
+    var deleteMediaDialog by remember { mutableStateOf(false) }
+
+    Scaffold { paddingValues ->
+        Box(
+            Modifier
+                .padding(paddingValues)
+                .fillMaxHeight()
+        ) {
             ConstraintLayout(Modifier.padding(10.dp)) {
                 val (header, info) = createRefs()
-                ConstraintLayout(
-                    Modifier.fillMaxWidth().background(
-                        MaterialTheme.colorScheme.inversePrimary,
-                        shape = ShapeDefaults.Medium
-                    ).padding(10.dp).zIndex(1f).constrainAs(header){}
-                ) {
-                    val (type, name) = createRefs()
-                    val icon = when(media.type){
-                        0 -> R.drawable.vinyl
-                        1 -> R.drawable.cassette
-                        2 -> R.drawable.cd
-                        3 -> R.drawable.minidisc
-                        else -> R.drawable.cd
+                with(sharedTransitionScope) {
+                    ConstraintLayout(
+                        Modifier
+                            .fillMaxWidth()
+                            .background(
+                                MaterialTheme.colorScheme.inversePrimary,
+                                shape = ShapeDefaults.Medium
+                            )
+                            .padding(10.dp)
+                            .zIndex(1f)
+                            .sharedBounds(
+                                sharedTransitionScope.rememberSharedContentState(key = "box-${media.id}"),
+                                animatedContentScope
+                            )
+                            .constrainAs(header) {}
+                    ) {
+                        val (type, name) = createRefs()
+                        val icon = when (media.type) {
+                            0 -> R.drawable.vinyl
+                            1 -> R.drawable.cassette
+                            2 -> R.drawable.cd
+                            3 -> R.drawable.minidisc
+                            else -> R.drawable.cd
+                        }
+                        val iconName = when (media.type) {
+                            0 -> R.string.vinyl
+                            1 -> R.string.cassette
+                            2 -> R.string.cd
+                            3 -> R.string.minidisc
+                            else -> R.string.cd
+                        }
+                        Image(
+                            painterResource(icon),
+                            contentDescription = stringResource(iconName),
+                            modifier = Modifier
+                                .padding(5.dp)
+                                .width(100.dp)
+                                .sharedElement(
+                                    sharedTransitionScope.rememberSharedContentState(key = "image-${media.id}"),
+                                    animatedContentScope
+                                )
+                                .constrainAs(type) {
+                                    start.linkTo(parent.start)
+                                    top.linkTo(parent.top)
+                                },
+                            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary)
+                        )
+                        Text(
+                            media.name,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontSize = 30.sp,
+                            lineHeight = 30.sp,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier
+                                .fillMaxWidth(.7f)
+                                .height(IntrinsicSize.Min)
+                                .sharedElement(
+                                    sharedTransitionScope.rememberSharedContentState(key = "name-${media.id}"),
+                                    animatedContentScope
+                                )
+                                .constrainAs(name) {
+                                    start.linkTo(type.end)
+                                    end.linkTo(parent.end)
+                                    top.linkTo(parent.top)
+                                    bottom.linkTo(parent.bottom)
+                                })
                     }
-                    val iconName = when(media.type){
-                        0 -> R.string.vinyl
-                        1 -> R.string.cassette
-                        2 -> R.string.cd
-                        3 -> R.string.minidisc
-                        else -> R.string.cd
-                    }
-                    Image(
-                        painterResource(icon),
-                        contentDescription = stringResource(iconName),
-                        modifier = Modifier.padding(5.dp).width(100.dp).constrainAs(type) {
-                            start.linkTo(parent.start)
-                            top.linkTo(parent.top)
-                        },
-                        colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary)
-                    )
-                    Text(
-                        media.name,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontSize = 30.sp,
-                        lineHeight = 30.sp,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth(.7f).constrainAs(name) {
-                            start.linkTo(type.end)
-                            end.linkTo(parent.end)
-                            top.linkTo(parent.top)
-                            bottom.linkTo(parent.bottom)
-                        })
                 }
-                LazyRow(horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxWidth().background(
-                    MaterialTheme.colorScheme.secondary,
-                    shape = ShapeDefaults.Small
-                ).padding(top = 25.dp, bottom = 5.dp).constrainAs(info){
-                    top.linkTo(header.bottom, (-20).dp)
-                }) {
-                    item{
-                        Text("${media.plays} Scrobbles", color = MaterialTheme.colorScheme.onSecondary, modifier = Modifier.animateItem())
+                LazyRow(
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            MaterialTheme.colorScheme.secondary,
+                            shape = ShapeDefaults.Small
+                        )
+                        .padding(top = 25.dp, bottom = 5.dp)
+                        .constrainAs(info) {
+                            top.linkTo(header.bottom, (-20).dp)
+                        }) {
+                    item {
+                        Text(
+                            "${media.plays} Scrobbles",
+                            color = MaterialTheme.colorScheme.onSecondary,
+                            modifier = Modifier.animateItem()
+                        )
                     }
-                    if(hasTracks){
+                    if (hasTracks) {
                         item {
                             Icon(
                                 painterResource(R.drawable.icon_time),
                                 "Length",
                                 tint = MaterialTheme.colorScheme.onSecondary,
-                                modifier = Modifier.animateItem().padding(end=5.dp)
+                                modifier = Modifier
+                                    .animateItem()
+                                    .padding(end = 5.dp)
                             )
                             Text(
                                 "1:17:48",
@@ -124,30 +189,104 @@ fun MediaDetailScreen(){
                             )
                         }
                     }
-                    if(hasScrobbles){
-                        item{
-                            Icon(painterResource(R.drawable.icon_music_history),"Last Scrobbled", tint = MaterialTheme.colorScheme.onSecondary,
-                                modifier = Modifier.animateItem().padding(end=5.dp))
+                    if (hasScrobbles) {
+                        item {
+                            Icon(
+                                painterResource(R.drawable.icon_music_history),
+                                "Last Scrobbled",
+                                tint = MaterialTheme.colorScheme.onSecondary,
+                                modifier = Modifier
+                                    .animateItem()
+                                    .padding(end = 5.dp)
+                            )
                             val sdf = SimpleDateFormat("EEE hh:mm a", Locale.getDefault())
-                            Text(sdf.format(media.lastPlayed),color = MaterialTheme.colorScheme.onSecondary, modifier = Modifier.animateItem())
+                            Text(
+                                sdf.format(media.lastPlayed),
+                                color = MaterialTheme.colorScheme.onSecondary,
+                                modifier = Modifier.animateItem()
+                            )
                         }
                     }
                 }
-                LazyColumn{
+                LazyColumn {
 
+                }
+            }
+            HorizontalFloatingToolbar(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .offset(y = -ScreenOffset),
+                expanded = true,
+                floatingActionButton = {
+                    FloatingToolbarDefaults.VibrantFloatingActionButton(onClick = { viewmodel.scrobbleMedia() }) {
+                        Icon(
+                            painterResource(R.drawable.button_upload),
+                            "Scrobble"
+                        )
+                    }
+                }) {
+
+                IconButton(onClick = {}) {
+                    Icon(
+                        painterResource(R.drawable.button_cloud_download),
+                        "Pull Data From Cloud"
+                    )
+                }
+                IconButton(onClick = { deleteMediaDialog = true }) {
+                    AnimatedVisibility(!deleteMediaDialog,enter = fadeIn() + scaleIn(),
+                        exit = fadeOut() + scaleOut()) {
+                        with(sharedTransitionScope) {
+                            Icon(
+                                painterResource(R.drawable.button_delete),
+                                "Delete Media",
+                                modifier = Modifier.sharedBounds(
+                                        rememberSharedContentState(key = "delete-media"),
+                                this@AnimatedVisibility,
+                                clipInOverlayDuringTransition = OverlayClip(RoundedCornerShape(16.dp))
+                            )
+                            )
+                        }
+                    }
+                }
+
+                        IconButton(
+                            onClick = { editMediaDialog = true }
+                        ) {
+                            AnimatedVisibility(!editMediaDialog,enter = fadeIn() + scaleIn(),
+                                exit = fadeOut() + scaleOut()) {
+                                with(sharedTransitionScope) {
+                            Icon(painterResource(R.drawable.button_edit), "Edit Media",modifier = Modifier.sharedBounds(
+                                rememberSharedContentState(key = "add-media"),
+                                this@AnimatedVisibility,
+                                clipInOverlayDuringTransition = OverlayClip(RoundedCornerShape(16.dp))
+                            ))
+
+                        }
+                    }
                 }
             }
         }
     }
+
+    AddEditMediaDialog(media, { editMediaDialog = false }, onSave =  { media -> editMediaDialog = false },sharedTransitionScope,editMediaDialog)
+    DeleteMediaDialog(media,{deleteMediaDialog = false}, onConfirm = { media -> deleteMediaDialog = false}, sharedTransitionScope, deleteMediaDialog)
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Preview
 @Composable
-fun MediaDetailPreview(){
+fun MediaDetailPreview() {
     val navController = rememberNavController()
-    TapeEaterTheme {
-        NavHost(navController, startDestination = MediaDetail(4)){
-            composable<MediaDetail> { MediaDetailScreen() }
+    SharedTransitionLayout {
+        TapeEaterTheme {
+            NavHost(navController, startDestination = MediaDetail(4)) {
+                composable<MediaDetail> {
+                    MediaDetailScreen(
+                        this@SharedTransitionLayout,
+                        this@composable
+                    )
+                }
+            }
         }
     }
 }

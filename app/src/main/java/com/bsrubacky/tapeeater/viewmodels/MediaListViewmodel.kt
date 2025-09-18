@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.stateIn
 class MediaListViewmodel : ViewModel() {
 
     //temporary hardcoding to figure out ui movements before setting up database properly
-    val media = listOf(
+    var media = mutableListOf(
         Media(0, "Wolfpack", 1),
         Media(1, "How To Drive A Bus", 0),
         Media(2, "Furfag", 2),
@@ -71,5 +71,10 @@ class MediaListViewmodel : ViewModel() {
 
     fun onSortChange(sort: Int) {
         _sortValue.value = sort
+    }
+
+    fun addMedia(toAdd:Media){
+        media.add(toAdd)
+        _mediaList.value = media
     }
 }

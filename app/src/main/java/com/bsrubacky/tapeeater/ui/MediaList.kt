@@ -1,8 +1,17 @@
 package com.bsrubacky.tapeeater.ui
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.expandIn
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkOut
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,6 +21,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -41,6 +51,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.bsrubacky.tapeeater.R
 import com.bsrubacky.tapeeater.ui.menu.FilterSortItem
 import com.bsrubacky.tapeeater.viewmodels.MediaListViewmodel
@@ -50,9 +63,13 @@ import kotlinx.serialization.Serializable
 @Serializable
 object MediaList
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
-fun MediaListScreen(navToDetail: (Int) -> Unit) {
+fun MediaListScreen(
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedVisibilityScope,
+    navToDetail: (Int) -> Unit
+) {
 
     val viewmodel = viewModel<MediaListViewmodel>()
 
@@ -60,7 +77,7 @@ fun MediaListScreen(navToDetail: (Int) -> Unit) {
     val filterValue by viewmodel.filterValue.collectAsState()
     val mediaList by viewmodel.mediaList.collectAsState()
     var filtersExpanded by remember { mutableStateOf(false) }
-
+    var addMediaDialog by remember { mutableStateOf(false) }
     Scaffold(
         topBar = {
             ConstraintLayout(Modifier.fillMaxWidth()) {
@@ -214,8 +231,20 @@ fun MediaListScreen(navToDetail: (Int) -> Unit) {
             }
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = {}) {
-                Icon(painterResource(R.drawable.button_add), "Add Media")
+            AnimatedVisibility(!addMediaDialog,enter = fadeIn() + scaleIn(),
+                exit = fadeOut() + scaleOut()) {
+                with(sharedTransitionScope) {
+                        FloatingActionButton(
+                            onClick = { addMediaDialog = true },
+                            modifier = Modifier.sharedBounds(
+                                rememberSharedContentState(key = "add-media"),
+                                this@AnimatedVisibility,
+                                clipInOverlayDuringTransition = OverlayClip(RoundedCornerShape(16.dp))
+                            )
+                        ) {
+                            Icon(painterResource(R.drawable.button_add), "Add Media")
+                        }
+                }
             }
         }) { paddingValues ->
         Box(
@@ -224,7 +253,10 @@ fun MediaListScreen(navToDetail: (Int) -> Unit) {
                 .fillMaxWidth()
                 .fillMaxHeight()
         ) {
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(0.dp)) {
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                item {
+                    HorizontalDivider()
+                }
                 items(mediaList, key = { it.id }) { media ->
                     val icon = when (media.type) {
                         0 -> R.drawable.vinyl
@@ -246,44 +278,72 @@ fun MediaListScreen(navToDetail: (Int) -> Unit) {
                             .height(45.dp)
                             .animateItem()
                     ) {
-                        val (click, scrobble, divider) = createRefs()
-                        Box(Modifier
-                            .clickable {
-                                navToDetail(media.id)
-                            }
-                            .constrainAs(click) {
-                                start.linkTo(parent.start)
-                                end.linkTo(scrobble.start)
-                            }
-                            .fillMaxWidth(.85f)) {
-                            Icon(
-                                painterResource(icon),
-                                stringResource(iconName),
-                                modifier = Modifier
-                                    .align(Alignment.CenterStart),
-                                tint = MaterialTheme.colorScheme.primary,
-
-                                )
-                            Text(
-                                text = media.name,
-                                modifier = Modifier
+                        with(sharedTransitionScope) {
+                            val (click, scrobble, divider) = createRefs()
+                            ConstraintLayout(
+                                Modifier
+                                    .background(MaterialTheme.colorScheme.background)
+                                    .clickable {
+                                        navToDetail(media.id)
+                                    }
+                                    .sharedBounds(
+                                        sharedTransitionScope.rememberSharedContentState(key = "box-${media.id}"),
+                                        animatedContentScope
+                                    )
+                                    .constrainAs(click) {
+                                        start.linkTo(parent.start)
+                                        end.linkTo(scrobble.start)
+                                    }
                                     .fillMaxWidth(.85f)
-                                    .align(Alignment.CenterEnd),
-                                overflow = TextOverflow.Ellipsis,
-                                textAlign = TextAlign.Center,
-                                fontSize = 23.sp
-                            )
-                        }
-                        IconButton(
-                            onClick = {}, modifier = Modifier
-                                .constrainAs(scrobble) {
-                                    end.linkTo(parent.end)
-                                }) {
-                            Icon(painterResource(R.drawable.button_upload), "Scrobble")
-                        }
-                        HorizontalDivider(modifier = Modifier.constrainAs(divider) {
+                            ) {
+                                val (image, name) = createRefs()
+                                Icon(
+                                    painterResource(icon),
+                                    stringResource(iconName),
+                                    modifier = Modifier
+                                        .sharedElement(
+                                            sharedTransitionScope.rememberSharedContentState(key = "image-${media.id}"),
+                                            animatedContentScope
+                                        )
+                                        .constrainAs(image) {
+                                            top.linkTo(parent.top)
+                                            bottom.linkTo(parent.bottom)
+                                            start.linkTo(parent.start)
+                                        },
+                                    tint = MaterialTheme.colorScheme.primary,
 
-                        })
+                                    )
+                                Text(
+                                    text = media.name,
+                                    modifier = Modifier
+                                        .fillMaxWidth(.85f)
+                                        .sharedElement(
+                                            sharedTransitionScope.rememberSharedContentState(key = "name-${media.id}"),
+                                            animatedContentScope
+                                        )
+                                        .constrainAs(name) {
+                                            top.linkTo(parent.top)
+                                            bottom.linkTo(parent.bottom)
+                                            start.linkTo(image.end)
+                                            end.linkTo(parent.end)
+                                        },
+                                    overflow = TextOverflow.Ellipsis,
+                                    textAlign = TextAlign.Center,
+                                    fontSize = 23.sp,
+                                    lineHeight = 23.sp
+                                )
+                            }
+                            IconButton(
+                                onClick = {}, modifier = Modifier
+                                    .constrainAs(scrobble) {
+                                        end.linkTo(parent.end)
+                                    }) {
+                                Icon(painterResource(R.drawable.button_upload), "Scrobble")
+                            }
+                            HorizontalDivider(modifier = Modifier.constrainAs(divider) {
+                                top.linkTo(click.bottom)
+                            })
+                        }
                     }
                 }
             }
@@ -291,12 +351,32 @@ fun MediaListScreen(navToDetail: (Int) -> Unit) {
 
     }
 
+        AddEditMediaDialog(
+            onDismissRequest = { addMediaDialog = false },
+            onSave = { media ->
+                viewmodel.addMedia(media)
+                addMediaDialog = false
+            },
+            sharedTransitionScope = sharedTransitionScope,
+            isVisible = addMediaDialog
+        )
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 @Preview
 fun MediaListScreenPreview() {
-    TapeEaterTheme {
-        MediaListScreen { int -> }
+    val navController = rememberNavController()
+    SharedTransitionLayout {
+        TapeEaterTheme {
+            NavHost(navController, startDestination = MediaList) {
+                composable<MediaList> {
+                    MediaListScreen(
+                        this@SharedTransitionLayout,
+                        this@composable
+                    ) { int -> }
+                }
+            }
+        }
     }
 }
