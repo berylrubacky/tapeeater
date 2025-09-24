@@ -62,13 +62,14 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 
 @Serializable
-data class MediaDetail(val id: Int)
+data class MediaDetail(val id: Long)
 
 @OptIn(ExperimentalSharedTransitionApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun MediaDetailScreen(
     sharedTransitionScope: SharedTransitionScope,
-    animatedContentScope: AnimatedContentScope
+    animatedContentScope: AnimatedContentScope,
+    back: () -> Unit
 ) {
     val viewmodel = viewModel<MediaDetailViewmodel>()
     val media by viewmodel.media.collectAsState()
@@ -168,7 +169,7 @@ fun MediaDetailScreen(
                         }) {
                     item {
                         Text(
-                            pluralStringResource(R.plurals.scrobble,media.plays,media.plays),
+                            pluralStringResource(R.plurals.scrobble, media.plays, media.plays),
                             color = MaterialTheme.colorScheme.onSecondary,
                             modifier = Modifier.animateItem()
                         )
@@ -234,33 +235,49 @@ fun MediaDetailScreen(
                     )
                 }
                 IconButton(onClick = { deleteMediaDialog = true }) {
-                    AnimatedVisibility(!deleteMediaDialog,enter = fadeIn() + scaleIn(),
-                        exit = fadeOut() + scaleOut()) {
+                    AnimatedVisibility(
+                        !deleteMediaDialog, enter = fadeIn() + scaleIn(),
+                        exit = fadeOut() + scaleOut()
+                    ) {
                         with(sharedTransitionScope) {
                             Icon(
                                 painterResource(R.drawable.button_delete),
                                 stringResource(R.string.delete_media),
                                 modifier = Modifier.sharedBounds(
-                                        rememberSharedContentState(key = "delete-media"),
-                                this@AnimatedVisibility,
-                                clipInOverlayDuringTransition = OverlayClip(RoundedCornerShape(16.dp))
-                            )
+                                    rememberSharedContentState(key = "delete-media"),
+                                    this@AnimatedVisibility,
+                                    clipInOverlayDuringTransition = OverlayClip(
+                                        RoundedCornerShape(
+                                            16.dp
+                                        )
+                                    )
+                                )
                             )
                         }
                     }
                 }
 
-                        IconButton(
-                            onClick = { editMediaDialog = true }
-                        ) {
-                            AnimatedVisibility(!editMediaDialog,enter = fadeIn() + scaleIn(),
-                                exit = fadeOut() + scaleOut()) {
-                                with(sharedTransitionScope) {
-                            Icon(painterResource(R.drawable.button_edit), stringResource(R.string.edit_media),modifier = Modifier.sharedBounds(
-                                rememberSharedContentState(key = "add-media"),
-                                this@AnimatedVisibility,
-                                clipInOverlayDuringTransition = OverlayClip(RoundedCornerShape(16.dp))
-                            ))
+                IconButton(
+                    onClick = { editMediaDialog = true }
+                ) {
+                    AnimatedVisibility(
+                        !editMediaDialog, enter = fadeIn() + scaleIn(),
+                        exit = fadeOut() + scaleOut()
+                    ) {
+                        with(sharedTransitionScope) {
+                            Icon(
+                                painterResource(R.drawable.button_edit),
+                                stringResource(R.string.edit_media),
+                                modifier = Modifier.sharedBounds(
+                                    rememberSharedContentState(key = "add-media"),
+                                    this@AnimatedVisibility,
+                                    clipInOverlayDuringTransition = OverlayClip(
+                                        RoundedCornerShape(
+                                            16.dp
+                                        )
+                                    )
+                                )
+                            )
 
                         }
                     }
@@ -269,8 +286,27 @@ fun MediaDetailScreen(
         }
     }
 
-    AddEditMediaDialog(media, { editMediaDialog = false }, onSave =  { media -> editMediaDialog = false },sharedTransitionScope,editMediaDialog)
-    DeleteMediaDialog(media,{deleteMediaDialog = false}, onConfirm = { media -> deleteMediaDialog = false}, sharedTransitionScope, deleteMediaDialog)
+    AddEditMediaDialog(
+        media,
+        { editMediaDialog = false },
+        onSave = { media ->
+            editMediaDialog = false
+            viewmodel.editMedia(media)
+        },
+        sharedTransitionScope,
+        editMediaDialog
+    )
+    DeleteMediaDialog(
+        media,
+        { deleteMediaDialog = false },
+        onConfirm = { media ->
+            deleteMediaDialog = false
+            viewmodel.deleteMedia(media)
+            back()
+        },
+        sharedTransitionScope,
+        deleteMediaDialog
+    )
 }
 
 @OptIn(ExperimentalSharedTransitionApi::class)
@@ -285,7 +321,7 @@ fun MediaDetailPreview() {
                     MediaDetailScreen(
                         this@SharedTransitionLayout,
                         this@composable
-                    )
+                    ) {}
                 }
             }
         }

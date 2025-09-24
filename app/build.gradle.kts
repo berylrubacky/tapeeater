@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.compose.compiler)
     kotlin("plugin.serialization") version "2.0.21"
+    id("com.google.devtools.ksp") version "2.2.20-2.0.3"
 }
 
 android {
@@ -39,6 +40,7 @@ android {
 
 dependencies {
     implementation(libs.androidx.room.ktx)
+    implementation(libs.androidx.paging.testing)
     val composeBom = platform("androidx.compose:compose-bom:2025.08.00")
     implementation(composeBom)
     androidTestImplementation(composeBom)
@@ -58,6 +60,10 @@ dependencies {
     implementation (libs.androidx.navigation.compose)
     implementation(libs.jetbrains.kotlinx.serialization.json)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.paging)
+    implementation(libs.androidx.paging.compose)
+    ksp(libs.androidx.room.compiler)
     debugImplementation(libs.androidx.ui.tooling)
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.test.manifest)

@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -54,8 +53,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.paging.compose.collectAsLazyPagingItems
 import com.bsrubacky.tapeeater.R
-import com.bsrubacky.tapeeater.ui.menu.FilterSortItem
+import com.bsrubacky.tapeeater.ui.menu.FilterItem
+import com.bsrubacky.tapeeater.ui.menu.SortItem
 import com.bsrubacky.tapeeater.viewmodels.MediaListViewmodel
 import kotlinx.serialization.Serializable
 
@@ -68,27 +69,35 @@ object MediaList
 fun MediaListScreen(
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedVisibilityScope,
-    navToDetail: (Int) -> Unit
+    navToDetail: (Long) -> Unit
 ) {
 
     val viewmodel = viewModel<MediaListViewmodel>()
 
     val searchText by viewmodel.searchText.collectAsState()
     val filterValue by viewmodel.filterValue.collectAsState()
-    val mediaList by viewmodel.mediaList.collectAsState()
+    val sortValue by viewmodel.sortValue.collectAsState()
+    val mediaList = viewmodel.mediaList.collectAsLazyPagingItems()
     var filtersExpanded by remember { mutableStateOf(false) }
+    var sortExpanded by remember { mutableStateOf(false) }
     var addMediaDialog by remember { mutableStateOf(false) }
     Scaffold(
         topBar = {
             ConstraintLayout(Modifier.fillMaxWidth()) {
-                val (search, settings, filters) = createRefs()
+                val (search, settings, dropdowns) = createRefs()
                 val searchColors = SearchBarDefaults.colors()
                 SearchBar(
                     inputField = {
                         SearchBarDefaults.InputField(
                             query = searchText,
-                            onQueryChange = viewmodel::onSearchTextChange,
-                            onSearch = viewmodel::onSearchTextChange,
+                            onQueryChange = { text ->
+                                viewmodel.onSearchTextChange(text)
+                                mediaList.refresh()
+                            },
+                            onSearch = { text ->
+                                viewmodel.onSearchTextChange(text)
+                                mediaList.refresh()
+                            },
                             expanded = false,
                             onExpandedChange = { expanded: Boolean -> },
                             colors = searchColors.inputFieldColors,
@@ -136,19 +145,15 @@ fun MediaListScreen(
                                         )
                                     }
                                     IconButton(
-                                        onClick = { filtersExpanded = true },
-                                        colors = if (filterValue == -1) {
-                                            IconButtonDefaults.iconButtonColors()
-                                        } else {
-                                            IconButtonDefaults.filledIconButtonColors()
-                                        },
+                                        onClick = { sortExpanded = true },
+                                        colors = IconButtonDefaults.iconButtonColors(),
                                         modifier = Modifier.constrainAs(sort) {
                                             end.linkTo(parent.end)
                                         }
                                     ) {
                                         Icon(
                                             painterResource(R.drawable.button_sort),
-                                            stringResource(R.string.filter_media)
+                                            stringResource(R.string.sort_media)
                                         )
                                     }
                                 }
@@ -174,52 +179,110 @@ fun MediaListScreen(
                             bottom.linkTo(parent.bottom)
                         }
                 )
-                Box(modifier = Modifier.constrainAs(filters) {
+                Box(modifier = Modifier.constrainAs(dropdowns) {
                     end.linkTo(search.end)
                     top.linkTo(search.bottom)
-                }) {
+                })
+                {
                     DropdownMenu(
                         expanded = filtersExpanded,
                         onDismissRequest = { filtersExpanded = false }
-                    ) {
+                    )
+                    {
                         AnimatedVisibility(filterValue != -1) {
-                            FilterSortItem(
+                            FilterItem(
                                 painterResource(R.drawable.button_filter_off),
                                 stringResource(R.string.clear_filters)
                             ) {
                                 viewmodel.onFilterChange(-1)
+                                mediaList.refresh()
                             }
                         }
-                        FilterSortItem(
+                        FilterItem(
                             painterResource(R.drawable.vinyl),
                             stringResource(R.string.vinyl),
                             filterValue == 0
                         ) {
                             viewmodel.onFilterChange(0)
+                            mediaList.refresh()
                         }
-                        FilterSortItem(
+                        FilterItem(
                             painterResource(R.drawable.cassette),
                             stringResource(R.string.cassette),
                             filterValue == 1
                         ) {
                             viewmodel.onFilterChange(1)
+                            mediaList.refresh()
                         }
-                        FilterSortItem(
+                        FilterItem(
                             painterResource(R.drawable.cd),
                             stringResource(R.string.cd),
                             filterValue == 2
                         ) {
                             viewmodel.onFilterChange(2)
+                            mediaList.refresh()
                         }
-                        FilterSortItem(
+                        FilterItem(
                             painterResource(R.drawable.minidisc),
                             stringResource(R.string.minidisc),
                             filterValue == 3
                         ) {
                             viewmodel.onFilterChange(3)
+                            mediaList.refresh()
+                        }
+                    }
+                    DropdownMenu(
+                        expanded = sortExpanded,
+                        onDismissRequest = { sortExpanded = false }
+                    )
+                    {
+                        SortItem(
+                            painterResource(R.drawable.label_alphabetical),
+                            stringResource(R.string.sort_alpha),
+                            if (sortValue == 1) {
+                                painterResource(R.drawable.button_sort_desc)
+                            } else {
+                                painterResource(R.drawable.button_sort_asc)
+                            },
+                            if (sortValue == 1) {
+                                stringResource(R.string.descending)
+                            } else {
+                                stringResource(R.string.ascending)
+                            },
+                            sortValue == 0 || sortValue == 1
+                        ) {
+                            if (sortValue == 0) {
+                                viewmodel.onSortChange(1)
+                            } else {
+                                viewmodel.onSortChange(0)
+                            }
+                            mediaList.refresh()
+                        }
+                        SortItem(
+                            painterResource(R.drawable.label_history),
+                            stringResource(R.string.sort_history),
+                            if (sortValue == 3) {
+                                painterResource(R.drawable.button_sort_desc)
+                            } else {
+                                painterResource(R.drawable.button_sort_asc)
+                            },
+                            if (sortValue == 3) {
+                                stringResource(R.string.descending)
+                            } else {
+                                stringResource(R.string.ascending)
+                            },
+                            sortValue == 2 || sortValue == 3
+                        ) {
+                            if (sortValue == 2) {
+                                viewmodel.onSortChange(3)
+                            } else {
+                                viewmodel.onSortChange(2)
+                            }
+                            mediaList.refresh()
                         }
                     }
                 }
+
                 IconButton(
                     onClick = {}, modifier = Modifier
                         .padding(5.dp)
@@ -232,19 +295,21 @@ fun MediaListScreen(
             }
         },
         floatingActionButton = {
-            AnimatedVisibility(!addMediaDialog,enter = fadeIn() + scaleIn(),
-                exit = fadeOut() + scaleOut()) {
+            AnimatedVisibility(
+                !addMediaDialog, enter = fadeIn() + scaleIn(),
+                exit = fadeOut() + scaleOut()
+            ) {
                 with(sharedTransitionScope) {
-                        FloatingActionButton(
-                            onClick = { addMediaDialog = true },
-                            modifier = Modifier.sharedBounds(
-                                rememberSharedContentState(key = "add-media"),
-                                this@AnimatedVisibility,
-                                clipInOverlayDuringTransition = OverlayClip(RoundedCornerShape(16.dp))
-                            )
-                        ) {
-                            Icon(painterResource(R.drawable.button_add), "Add Media")
-                        }
+                    FloatingActionButton(
+                        onClick = { addMediaDialog = true },
+                        modifier = Modifier.sharedBounds(
+                            rememberSharedContentState(key = "add-media"),
+                            this@AnimatedVisibility,
+                            clipInOverlayDuringTransition = OverlayClip(RoundedCornerShape(16.dp))
+                        )
+                    ) {
+                        Icon(painterResource(R.drawable.button_add), "Add Media")
+                    }
                 }
             }
         }) { paddingValues ->
@@ -258,7 +323,8 @@ fun MediaListScreen(
                 item {
                     HorizontalDivider()
                 }
-                items(mediaList, key = { it.id }) { media ->
+                items(mediaList.itemCount, key = { mediaList[it]!!.id }) { index ->
+                    val media = mediaList[index]!!
                     val icon = when (media.type) {
                         0 -> R.drawable.vinyl
                         1 -> R.drawable.cassette
@@ -352,15 +418,15 @@ fun MediaListScreen(
 
     }
 
-        AddEditMediaDialog(
-            onDismissRequest = { addMediaDialog = false },
-            onSave = { media ->
-                viewmodel.addMedia(media)
-                addMediaDialog = false
-            },
-            sharedTransitionScope = sharedTransitionScope,
-            isVisible = addMediaDialog
-        )
+    AddEditMediaDialog(
+        onDismissRequest = { addMediaDialog = false },
+        onSave = { media ->
+            viewmodel.addMedia(media)
+            addMediaDialog = false
+        },
+        sharedTransitionScope = sharedTransitionScope,
+        isVisible = addMediaDialog
+    )
 }
 
 @OptIn(ExperimentalSharedTransitionApi::class)

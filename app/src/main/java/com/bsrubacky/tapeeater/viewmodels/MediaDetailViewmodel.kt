@@ -1,35 +1,31 @@
 package com.bsrubacky.tapeeater.viewmodels
 
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.bsrubacky.tapeeater.database.TapeEaterDatabase
 import com.bsrubacky.tapeeater.database.entities.Media
 import com.bsrubacky.tapeeater.ui.MediaDetail
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import java.util.Date
 
-class MediaDetailViewmodel(savedStateHandle: SavedStateHandle) : ViewModel() {
+class MediaDetailViewmodel(application: Application, savedStateHandle: SavedStateHandle) :
+    AndroidViewModel(application) {
     private val passed = savedStateHandle.toRoute<MediaDetail>()
+    private val database = TapeEaterDatabase.getDatabase(application.applicationContext)
 
-    //temporary hardcoding to figure out ui movements before setting up database properly
-    val mediaList = listOf(
-        Media(0, "Wolfpack", 1),
-        Media(1, "How To Drive A Bus", 0),
-        Media(2, "Furfag", 2),
-        Media(3, "Log off and Go Outside!", 3),
-        Media(
-            4,
-            "The Circus Egotistica; or, How I Spent Most of my Life as a Lost Cause",
-            2,
-            lastPlayed = Date().time
-        ),
-        Media(5, "Sutured Self", 3),
-        Media(6, "All These Faces", 3),
-        Media(7, "Partners", 3)
-    )
+    init {
+        viewModelScope.launch(Dispatchers.IO) {
+            _media.value = database.mediaDao().select(passed.id)
+        }
+    }
 
-    private val _media = MutableStateFlow(mediaList[passed.id])
+    private val _media = MutableStateFlow(Media(-1, "", -1))
     val media = _media.asStateFlow()
 
     private val _hasScrobbles = MutableStateFlow(false)
@@ -41,5 +37,17 @@ class MediaDetailViewmodel(savedStateHandle: SavedStateHandle) : ViewModel() {
     fun scrobbleMedia() {
         _media.value.lastPlayed = Date().time
         _hasScrobbles.value = true
+    }
+
+    fun editMedia(toEdit: Media) {
+        viewModelScope.launch(Dispatchers.IO) {
+            database.mediaDao().update(toEdit)
+        }
+    }
+
+    fun deleteMedia(toDelete: Media) {
+        viewModelScope.launch(Dispatchers.IO) {
+            database.mediaDao().delete(toDelete)
+        }
     }
 }

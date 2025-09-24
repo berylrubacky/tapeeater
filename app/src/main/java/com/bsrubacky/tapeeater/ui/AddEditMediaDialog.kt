@@ -47,7 +47,7 @@ import com.bsrubacky.tapeeater.database.entities.Media
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun AddEditMediaDialog(
-    media: Media = Media(-1, "", -1),
+    media: Media = Media(0, "", -1),
     onDismissRequest: () -> Unit,
     onSave: (Media) -> Unit,
     sharedTransitionScope: SharedTransitionScope,
@@ -57,7 +57,7 @@ fun AddEditMediaDialog(
     with(sharedTransitionScope) {
         AnimatedContent(
             targetState = isVisible,
-            transitionSpec = {fadeIn() togetherWith fadeOut()},
+            transitionSpec = { fadeIn() togetherWith fadeOut() },
             label = "MediaEditDetails"
         ) { visible ->
             Box(Modifier.fillMaxSize()) {
@@ -87,7 +87,8 @@ fun AddEditMediaDialog(
                                 .sharedBounds(
                                     rememberSharedContentState(key = "add-media"),
                                     this@AnimatedContent
-                                ).constrainAs(dialog) {
+                                )
+                                .constrainAs(dialog) {
                                     top.linkTo(parent.top)
                                     bottom.linkTo(parent.bottom)
                                     start.linkTo(parent.start)
@@ -98,7 +99,9 @@ fun AddEditMediaDialog(
                             TextField(
                                 textFieldState,
                                 label = { Text(stringResource(R.string.media_name)) },
-                                modifier = Modifier.fillMaxWidth().padding(20.dp)
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(20.dp)
                             )
                             var type by remember { mutableIntStateOf(media.type) }
                             LazyHorizontalStaggeredGrid(
@@ -108,7 +111,7 @@ fun AddEditMediaDialog(
                                 modifier = Modifier
                                     .fillMaxWidth(.8f)
                                     .height(90.dp)
-                                    .padding(start= 20.dp,end= 20.dp)
+                                    .padding(start = 20.dp, end = 20.dp)
                                     .align(Alignment.CenterHorizontally)
                             ) {
                                 item {
@@ -176,7 +179,8 @@ fun AddEditMediaDialog(
                                 TextButton(
                                     {
                                         keyboardController?.hide()
-                                        onDismissRequest() }
+                                        onDismissRequest()
+                                    }
                                 ) { Text(stringResource(R.string.cancel)) }
                                 TextButton(
                                     {
@@ -201,8 +205,14 @@ fun AddEditMediaDialog(
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 @Preview
-fun AddEditMediaDialogPreview(){
+fun AddEditMediaDialogPreview() {
     SharedTransitionLayout {
-        AddEditMediaDialog(media = Media(1,"Wolfpack",2),{},{},this@SharedTransitionLayout,true)
+        AddEditMediaDialog(
+            media = Media(1, "Wolfpack", 2),
+            {},
+            {},
+            this@SharedTransitionLayout,
+            true
+        )
     }
 }

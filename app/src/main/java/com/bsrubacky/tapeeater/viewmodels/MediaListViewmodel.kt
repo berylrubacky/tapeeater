@@ -1,27 +1,21 @@
 package com.bsrubacky.tapeeater.viewmodels
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.cachedIn
+import com.bsrubacky.tapeeater.database.TapeEaterDatabase
 import com.bsrubacky.tapeeater.database.entities.Media
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
-class MediaListViewmodel : ViewModel() {
+class MediaListViewmodel(application: Application) : AndroidViewModel(application) {
 
-    //temporary hardcoding to figure out ui movements before setting up database properly
-    var media = mutableListOf(
-        Media(0, "Wolfpack", 1),
-        Media(1, "How To Drive A Bus", 0),
-        Media(2, "Furfag", 2),
-        Media(3, "Log off and Go Outside!", 3),
-        Media(4, "The Circus Egotistica; or, How I Spent Most of my Life as a Lost Cause", 2),
-        Media(5, "Sutured Self", 3),
-        Media(6, "All These Faces", 3),
-        Media(7, "Partners", 3)
-    )
+    private val database = TapeEaterDatabase.getDatabase(application.applicationContext)
 
     private val _sortValue = MutableStateFlow(0)
     val sortValue = _sortValue.asStateFlow()
@@ -32,30 +26,28 @@ class MediaListViewmodel : ViewModel() {
     private val _searchText = MutableStateFlow("")
     val searchText = _searchText.asStateFlow()
 
-    private val _mediaList = MutableStateFlow(media)
-    val mediaList = combine(filterValue, searchText, _mediaList) { filterType, text, medias ->
-        if (filterType == -1) {
-            if (text.isBlank()) {
-                medias.sortedBy { it.name }
-            } else {
-                medias.filter { media ->
-                    media.name.uppercase().contains(text.trim().uppercase())
-                }.sortedBy { it.name }
-            }
-        } else if (text.isBlank()) {
-            medias.filter { media ->
-                media.type == filterType
-            }.sortedBy { it.name }
+    private val _pager = Pager(
+        config = PagingConfig(25, enablePlaceholders = true)
+    ) {
+        val searchString = if (searchText.value.isBlank()) {
+            "%%"
         } else {
-            medias.filter { media ->
-                media.name.uppercase().contains(text.trim().uppercase()) && media.type == filterType
-            }.sortedBy { it.name }
+            "%${searchText.value}%"
         }
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = _mediaList.value
-    )
+        val filterString = if (filterValue.value == -1) {
+            "%"
+        } else {
+            filterValue.value.toString()
+        }
+        when (sortValue.value) {
+            3 -> database.mediaDao().searchDateDescending(searchString, filterString)
+            2 -> database.mediaDao().searchDateAscending(searchString, filterString)
+            1 -> database.mediaDao().searchAlphaDescending(searchString, filterString)
+            else -> database.mediaDao().searchAlphaAscending(searchString, filterString)
+        }
+    }
+    var mediaList = _pager.flow.cachedIn(viewModelScope)
+
 
     fun onSearchTextChange(text: String) {
         _searchText.value = text
@@ -73,8 +65,9 @@ class MediaListViewmodel : ViewModel() {
         _sortValue.value = sort
     }
 
-    fun addMedia(toAdd:Media){
-        media.add(toAdd)
-        _mediaList.value = media
+    fun addMedia(toAdd: Media) {
+        viewModelScope.launch(Dispatchers.IO) {
+            database.mediaDao().insert(toAdd)
+        }
     }
 }

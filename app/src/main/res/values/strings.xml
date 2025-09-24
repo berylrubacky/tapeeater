@@ -13,6 +13,10 @@
     <string name="filter_media">Filter Media</string>
     <string name="clear_filters">Clear Filters</string>
     <string name="sort_media">Sort Media</string>
+    <string name="sort_alpha">Alphabetically</string>
+    <string name="sort_history">Last Scrobbled</string>
+    <string name="ascending">Ascending</string>
+    <string name="descending">Descending</string>
 
     <!--Dialog Strings-->
     <string name="media_name">Media Name</string>

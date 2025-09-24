@@ -30,7 +30,7 @@ class MainActivity : ComponentActivity() {
                                 navController.navigate(MediaDetail(id = id))
                             }
                         }
-                        composable<MediaDetail> { MediaDetailScreen(this@SharedTransitionLayout,this@composable) }
+                        composable<MediaDetail> { MediaDetailScreen(this@SharedTransitionLayout,this@composable) { navController.popBackStack() } }
                     }
                 }
             }
