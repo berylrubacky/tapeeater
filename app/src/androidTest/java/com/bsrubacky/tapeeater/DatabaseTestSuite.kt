@@ -1,5 +1,6 @@
-package com.bsrubacky.tapeeater.database
+package com.bsrubacky.tapeeater
 
+import com.bsrubacky.tapeeater.database.MediaDatabaseTests
 import org.junit.runner.RunWith
 import org.junit.runners.Suite
 

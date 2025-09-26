@@ -1,4 +1,4 @@
-package com.bsrubacky.tapeeater.ui
+package com.bsrubacky.tapeeater.ui.media
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalSharedTransitionApi
@@ -23,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -48,7 +49,7 @@ fun DeleteMediaDialog(
         ) { visible ->
             Box(Modifier.fillMaxSize()) {
                 if (visible) {
-                    ConstraintLayout {
+                    ConstraintLayout (Modifier.testTag("delete-dialog")){
                         val (dialog, scrim) = createRefs()
                         Box(
                             modifier = Modifier
@@ -88,12 +89,15 @@ fun DeleteMediaDialog(
                             ) {
                                 TextButton(
                                     {
-                                        onDismissRequest() }
+                                        onDismissRequest()
+                                    },
+                                    Modifier.testTag("cancel-button")
                                 ) { Text(stringResource(R.string.cancel)) }
                                 TextButton(
                                     {
                                         onConfirm(media)
-                                    }
+                                    },
+                                    Modifier.testTag("delete-confirm-button")
                                 ) { Text(stringResource(R.string.delete)) }
                             }
                         }

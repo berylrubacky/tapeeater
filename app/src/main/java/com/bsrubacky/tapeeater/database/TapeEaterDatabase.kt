@@ -5,10 +5,12 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.bsrubacky.tapeeater.database.dao.MediaDao
+import com.bsrubacky.tapeeater.database.dao.TrackDao
 import com.bsrubacky.tapeeater.database.entities.Media
+import com.bsrubacky.tapeeater.database.entities.Track
 
 @Database(
-    entities = [Media::class],
+    entities = [Media::class, Track::class],
     version = 1,
     exportSchema = true
 )
@@ -32,4 +34,5 @@ abstract class TapeEaterDatabase : RoomDatabase() {
     }
 
     abstract fun mediaDao(): MediaDao
+    abstract fun trackDao(): TrackDao
 }

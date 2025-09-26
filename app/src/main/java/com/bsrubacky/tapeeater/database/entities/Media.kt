@@ -13,6 +13,7 @@ data class Media(
     @ColumnInfo("Name") var name: String,
     @ColumnInfo("Type") var type: Int,
     @ColumnInfo("Plays") val plays: Int = 0,
+    @ColumnInfo("Tracks") val tracks: Int = 0,
     @ColumnInfo("Last_Touched") val lastTouched: Long = Date().time,
     @ColumnInfo("Last_Played") var lastPlayed: Long? = null
 )

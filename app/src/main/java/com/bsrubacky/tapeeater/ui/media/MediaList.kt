@@ -1,4 +1,4 @@
-package com.bsrubacky.tapeeater.ui
+package com.bsrubacky.tapeeater.ui.media
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.AnimatedVisibilityScope
@@ -41,6 +41,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -53,11 +54,18 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.paging.LoadState
+import androidx.paging.LoadStates
+import androidx.paging.PagingData
+import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.bsrubacky.tapeeater.R
+import com.bsrubacky.tapeeater.database.entities.Media
+import com.bsrubacky.tapeeater.ui.TapeEaterTheme
 import com.bsrubacky.tapeeater.ui.menu.FilterItem
 import com.bsrubacky.tapeeater.ui.menu.SortItem
 import com.bsrubacky.tapeeater.viewmodels.MediaListViewmodel
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.serialization.Serializable
 
 
@@ -78,6 +86,37 @@ fun MediaListScreen(
     val filterValue by viewmodel.filterValue.collectAsState()
     val sortValue by viewmodel.sortValue.collectAsState()
     val mediaList = viewmodel.mediaList.collectAsLazyPagingItems()
+    MediaListContent(
+        searchText,
+        filterValue,
+        sortValue,
+        mediaList,
+        viewmodel::onSearchTextChange,
+        viewmodel::onFilterChange,
+        viewmodel::onSortChange,
+        viewmodel::addMedia,
+        sharedTransitionScope,
+        animatedContentScope,
+        navToDetail
+        )
+}
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
+@Composable
+fun MediaListContent(
+    searchText: String,
+    filterValue: Int,
+    sortValue: Int,
+    mediaList: LazyPagingItems<Media>,
+    onSearchTextChange: (String) -> Unit,
+    onFilterChange: (Int) -> Unit,
+    onSortChange: (Int) -> Unit,
+    addMedia: (Media) -> Unit,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedVisibilityScope,
+    navToDetail: (Long) -> Unit
+){
+
     var filtersExpanded by remember { mutableStateOf(false) }
     var sortExpanded by remember { mutableStateOf(false) }
     var addMediaDialog by remember { mutableStateOf(false) }
@@ -91,18 +130,18 @@ fun MediaListScreen(
                         SearchBarDefaults.InputField(
                             query = searchText,
                             onQueryChange = { text ->
-                                viewmodel.onSearchTextChange(text)
+                                onSearchTextChange(text)
                                 mediaList.refresh()
                             },
                             onSearch = { text ->
-                                viewmodel.onSearchTextChange(text)
+                                onSearchTextChange(text)
                                 mediaList.refresh()
                             },
                             expanded = false,
                             onExpandedChange = { expanded: Boolean -> },
                             colors = searchColors.inputFieldColors,
                             leadingIcon = {
-                                IconButton(onClick = { viewmodel.onSearchTextChange("") }) {
+                                IconButton(onClick = { onSearchTextChange("") }, Modifier.testTag("search-button")) {
                                     AnimatedVisibility(
                                         searchText.isBlank(),
                                         enter = expandIn(expandFrom = Alignment.Center),
@@ -137,7 +176,7 @@ fun MediaListScreen(
                                         },
                                         modifier = Modifier.constrainAs(filter) {
                                             end.linkTo(sort.start)
-                                        }
+                                        }.testTag("filter-button")
                                     ) {
                                         Icon(
                                             painterResource(R.drawable.button_filter),
@@ -149,7 +188,7 @@ fun MediaListScreen(
                                         colors = IconButtonDefaults.iconButtonColors(),
                                         modifier = Modifier.constrainAs(sort) {
                                             end.linkTo(parent.end)
-                                        }
+                                        }.testTag("sort-button")
                                     ) {
                                         Icon(
                                             painterResource(R.drawable.button_sort),
@@ -157,8 +196,8 @@ fun MediaListScreen(
                                         )
                                     }
                                 }
-                            }
-
+                            },
+                            modifier = Modifier.testTag("search-input")
                         )
 
                     },
@@ -186,7 +225,8 @@ fun MediaListScreen(
                 {
                     DropdownMenu(
                         expanded = filtersExpanded,
-                        onDismissRequest = { filtersExpanded = false }
+                        onDismissRequest = { filtersExpanded = false },
+                        modifier = Modifier.testTag("filter-dropdown")
                     )
                     {
                         AnimatedVisibility(filterValue != -1) {
@@ -194,7 +234,7 @@ fun MediaListScreen(
                                 painterResource(R.drawable.button_filter_off),
                                 stringResource(R.string.clear_filters)
                             ) {
-                                viewmodel.onFilterChange(-1)
+                                onFilterChange(-1)
                                 mediaList.refresh()
                             }
                         }
@@ -203,7 +243,7 @@ fun MediaListScreen(
                             stringResource(R.string.vinyl),
                             filterValue == 0
                         ) {
-                            viewmodel.onFilterChange(0)
+                            onFilterChange(0)
                             mediaList.refresh()
                         }
                         FilterItem(
@@ -211,7 +251,7 @@ fun MediaListScreen(
                             stringResource(R.string.cassette),
                             filterValue == 1
                         ) {
-                            viewmodel.onFilterChange(1)
+                            onFilterChange(1)
                             mediaList.refresh()
                         }
                         FilterItem(
@@ -219,7 +259,7 @@ fun MediaListScreen(
                             stringResource(R.string.cd),
                             filterValue == 2
                         ) {
-                            viewmodel.onFilterChange(2)
+                            onFilterChange(2)
                             mediaList.refresh()
                         }
                         FilterItem(
@@ -227,13 +267,14 @@ fun MediaListScreen(
                             stringResource(R.string.minidisc),
                             filterValue == 3
                         ) {
-                            viewmodel.onFilterChange(3)
+                            onFilterChange(3)
                             mediaList.refresh()
                         }
                     }
                     DropdownMenu(
                         expanded = sortExpanded,
-                        onDismissRequest = { sortExpanded = false }
+                        onDismissRequest = { sortExpanded = false },
+                        modifier = Modifier.testTag("sort-dropdown")
                     )
                     {
                         SortItem(
@@ -252,9 +293,9 @@ fun MediaListScreen(
                             sortValue == 0 || sortValue == 1
                         ) {
                             if (sortValue == 0) {
-                                viewmodel.onSortChange(1)
+                                onSortChange(1)
                             } else {
-                                viewmodel.onSortChange(0)
+                                onSortChange(0)
                             }
                             mediaList.refresh()
                         }
@@ -274,9 +315,9 @@ fun MediaListScreen(
                             sortValue == 2 || sortValue == 3
                         ) {
                             if (sortValue == 2) {
-                                viewmodel.onSortChange(3)
+                                onSortChange(3)
                             } else {
-                                viewmodel.onSortChange(2)
+                                onSortChange(2)
                             }
                             mediaList.refresh()
                         }
@@ -306,7 +347,7 @@ fun MediaListScreen(
                             rememberSharedContentState(key = "add-media"),
                             this@AnimatedVisibility,
                             clipInOverlayDuringTransition = OverlayClip(RoundedCornerShape(16.dp))
-                        )
+                        ).testTag("add-media-button")
                     ) {
                         Icon(painterResource(R.drawable.button_add), "Add Media")
                     }
@@ -319,7 +360,10 @@ fun MediaListScreen(
                 .fillMaxWidth()
                 .fillMaxHeight()
         ) {
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+                modifier = Modifier.testTag("media-list"))
+            {
                 item {
                     HorizontalDivider()
                 }
@@ -362,6 +406,7 @@ fun MediaListScreen(
                                         end.linkTo(scrobble.start)
                                     }
                                     .fillMaxWidth(.85f)
+                                    .testTag("media-item")
                             ) {
                                 val (image, name) = createRefs()
                                 Icon(
@@ -421,24 +466,44 @@ fun MediaListScreen(
     AddEditMediaDialog(
         onDismissRequest = { addMediaDialog = false },
         onSave = { media ->
-            viewmodel.addMedia(media)
+            addMedia(media)
             addMediaDialog = false
         },
         sharedTransitionScope = sharedTransitionScope,
         isVisible = addMediaDialog
     )
+
 }
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 @Preview
 fun MediaListScreenPreview() {
+    val lazyPagingItems = flowOf(
+    PagingData.from(
+        listOf(
+            Media(0,"Test",0),
+            Media(1,"Test2",1),
+            Media(2,"Test3",2),
+            Media(3,"Test4",3)
+        )
+    ),
+    ).collectAsLazyPagingItems()
     val navController = rememberNavController()
+
     SharedTransitionLayout {
         TapeEaterTheme {
             NavHost(navController, startDestination = MediaList) {
                 composable<MediaList> {
-                    MediaListScreen(
+                    MediaListContent(
+                        "",
+                        -1,
+                        -1,
+                        lazyPagingItems,
+                        {string->},
+                        {int->},
+                        {int->},
+                        {media->},
                         this@SharedTransitionLayout,
                         this@composable
                     ) { int -> }

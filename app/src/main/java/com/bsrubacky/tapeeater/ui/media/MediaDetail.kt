@@ -1,4 +1,4 @@
-package com.bsrubacky.tapeeater.ui
+package com.bsrubacky.tapeeater.ui.media
 
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.AnimatedVisibility
@@ -11,6 +11,7 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -29,6 +30,7 @@ import androidx.compose.material3.FloatingToolbarDefaults.ScreenOffset
 import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonColors
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ShapeDefaults
@@ -42,6 +44,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -56,6 +60,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.bsrubacky.tapeeater.R
+import com.bsrubacky.tapeeater.database.entities.Media
+import com.bsrubacky.tapeeater.ui.TapeEaterTheme
 import com.bsrubacky.tapeeater.viewmodels.MediaDetailViewmodel
 import kotlinx.serialization.Serializable
 import java.text.SimpleDateFormat
@@ -69,12 +75,40 @@ data class MediaDetail(val id: Long)
 fun MediaDetailScreen(
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedContentScope,
-    back: () -> Unit
+    back: () -> Unit,
 ) {
     val viewmodel = viewModel<MediaDetailViewmodel>()
     val media by viewmodel.media.collectAsState()
     val hasScrobbles by viewmodel.hasScrobbles.collectAsState()
     val hasTracks by viewmodel.hasTracks.collectAsState()
+
+    MediaDetailContent(
+        media,
+        hasScrobbles,
+        hasTracks,
+        viewmodel::scrobbleMedia,
+        viewmodel::deleteMedia,
+        viewmodel::editMedia,
+        sharedTransitionScope,
+        animatedContentScope,
+        back
+    )
+
+}
+
+@OptIn(ExperimentalSharedTransitionApi::class, ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun MediaDetailContent(
+    media: Media,
+    hasScrobbles: Boolean,
+    hasTracks: Boolean,
+    scrobbleMedia: () -> Unit,
+    deleteMedia: () -> Unit,
+    editMedia: (Media) -> Unit,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope,
+    back: () -> Unit
+) {
 
     var editMediaDialog by remember { mutableStateOf(false) }
     var deleteMediaDialog by remember { mutableStateOf(false) }
@@ -86,7 +120,7 @@ fun MediaDetailScreen(
                 .fillMaxHeight()
         ) {
             ConstraintLayout(Modifier.padding(10.dp)) {
-                val (header, info) = createRefs()
+                val (header, info, tracks) = createRefs()
                 with(sharedTransitionScope) {
                     ConstraintLayout(
                         Modifier
@@ -102,7 +136,8 @@ fun MediaDetailScreen(
                                 animatedContentScope
                             )
                             .constrainAs(header) {}
-                    ) {
+                    )
+                    {
                         val (type, name) = createRefs()
                         val icon = when (media.type) {
                             0 -> R.drawable.vinyl
@@ -131,7 +166,8 @@ fun MediaDetailScreen(
                                 .constrainAs(type) {
                                     start.linkTo(parent.start)
                                     top.linkTo(parent.top)
-                                },
+                                }
+                                .testTag("media-type"),
                             colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary)
                         )
                         Text(
@@ -152,7 +188,8 @@ fun MediaDetailScreen(
                                     end.linkTo(parent.end)
                                     top.linkTo(parent.top)
                                     bottom.linkTo(parent.bottom)
-                                })
+                                }
+                                .testTag("media-name"))
                     }
                 }
                 LazyRow(
@@ -161,17 +198,18 @@ fun MediaDetailScreen(
                         .fillMaxWidth()
                         .background(
                             MaterialTheme.colorScheme.secondary,
-                            shape = ShapeDefaults.Small
+                            shape = ShapeDefaults.Medium
                         )
                         .padding(top = 25.dp, bottom = 5.dp)
                         .constrainAs(info) {
                             top.linkTo(header.bottom, (-20).dp)
-                        }) {
+                        })
+                {
                     item {
                         Text(
                             pluralStringResource(R.plurals.scrobble, media.plays, media.plays),
                             color = MaterialTheme.colorScheme.onSecondary,
-                            modifier = Modifier.animateItem()
+                            modifier = Modifier.animateItem().testTag("scrobbles")
                         )
                     }
                     if (hasTracks) {
@@ -182,12 +220,12 @@ fun MediaDetailScreen(
                                 tint = MaterialTheme.colorScheme.onSecondary,
                                 modifier = Modifier
                                     .animateItem()
-                                    .padding(end = 5.dp)
+                                    .padding(end = 5.dp).testTag("length-icon")
                             )
                             Text(
                                 "1:17:48",
                                 color = MaterialTheme.colorScheme.onSecondary,
-                                modifier = Modifier.animateItem()
+                                modifier = Modifier.animateItem().testTag("length")
                             )
                         }
                     }
@@ -199,19 +237,31 @@ fun MediaDetailScreen(
                                 tint = MaterialTheme.colorScheme.onSecondary,
                                 modifier = Modifier
                                     .animateItem()
-                                    .padding(end = 5.dp)
+                                    .padding(end = 5.dp).testTag("last-scrobbled-icon")
                             )
                             val sdf = SimpleDateFormat("EEE hh:mm a", Locale.getDefault())
                             Text(
                                 sdf.format(media.lastPlayed),
                                 color = MaterialTheme.colorScheme.onSecondary,
-                                modifier = Modifier.animateItem()
+                                modifier = Modifier.animateItem().testTag("last-scrobbled")
                             )
                         }
                     }
                 }
-                LazyColumn {
-
+                LazyColumn(modifier = Modifier.fillMaxWidth().constrainAs(tracks){
+                    top.linkTo(info.bottom,10.dp)
+                    bottom.linkTo(parent.bottom)
+                })
+                {
+                    item{
+                        IconButton(
+                            {},
+                            modifier = Modifier.fillMaxWidth()
+                                .border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(30.dp)))
+                        {
+                            Icon(painterResource(R.drawable.button_add),"Add Track")
+                        }
+                    }
                 }
             }
             HorizontalFloatingToolbar(
@@ -220,7 +270,7 @@ fun MediaDetailScreen(
                     .offset(y = -ScreenOffset),
                 expanded = true,
                 floatingActionButton = {
-                    FloatingToolbarDefaults.VibrantFloatingActionButton(onClick = { viewmodel.scrobbleMedia() }) {
+                    FloatingToolbarDefaults.VibrantFloatingActionButton(onClick = { scrobbleMedia() }) {
                         Icon(
                             painterResource(R.drawable.button_upload),
                             "Scrobble"
@@ -234,7 +284,10 @@ fun MediaDetailScreen(
                         "Pull Data From Cloud"
                     )
                 }
-                IconButton(onClick = { deleteMediaDialog = true }) {
+                IconButton(
+                    onClick = { deleteMediaDialog = true },
+                    modifier = Modifier.testTag("delete-button"))
+                {
                     AnimatedVisibility(
                         !deleteMediaDialog, enter = fadeIn() + scaleIn(),
                         exit = fadeOut() + scaleOut()
@@ -258,7 +311,8 @@ fun MediaDetailScreen(
                 }
 
                 IconButton(
-                    onClick = { editMediaDialog = true }
+                    onClick = { editMediaDialog = true },
+                    modifier = Modifier.testTag("edit-button")
                 ) {
                     AnimatedVisibility(
                         !editMediaDialog, enter = fadeIn() + scaleIn(),
@@ -291,7 +345,7 @@ fun MediaDetailScreen(
         { editMediaDialog = false },
         onSave = { media ->
             editMediaDialog = false
-            viewmodel.editMedia(media)
+            editMedia(media)
         },
         sharedTransitionScope,
         editMediaDialog
@@ -301,7 +355,7 @@ fun MediaDetailScreen(
         { deleteMediaDialog = false },
         onConfirm = { media ->
             deleteMediaDialog = false
-            viewmodel.deleteMedia(media)
+            deleteMedia()
             back()
         },
         sharedTransitionScope,
@@ -313,17 +367,28 @@ fun MediaDetailScreen(
 @Preview
 @Composable
 fun MediaDetailPreview() {
+    val media = Media(0, "Wolfpack", 1)
+    val hasScrobbles = false
+    val hasTracks = false
     val navController = rememberNavController()
+
     SharedTransitionLayout {
         TapeEaterTheme {
-            NavHost(navController, startDestination = MediaDetail(4)) {
+            NavHost(navController, startDestination = MediaDetail(0)) {
                 composable<MediaDetail> {
-                    MediaDetailScreen(
+                    MediaDetailContent(
+                        media,
+                        hasScrobbles,
+                        hasTracks,
+                        {},
+                        {},
+                        { media: Media -> },
                         this@SharedTransitionLayout,
                         this@composable
-                    ) {}
+                    ) { }
                 }
             }
         }
     }
 }
+

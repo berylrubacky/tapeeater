@@ -8,10 +8,10 @@ import androidx.compose.animation.SharedTransitionLayout
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.bsrubacky.tapeeater.ui.MediaDetail
-import com.bsrubacky.tapeeater.ui.MediaDetailScreen
-import com.bsrubacky.tapeeater.ui.MediaList
-import com.bsrubacky.tapeeater.ui.MediaListScreen
+import com.bsrubacky.tapeeater.ui.media.MediaDetail
+import com.bsrubacky.tapeeater.ui.media.MediaDetailScreen
+import com.bsrubacky.tapeeater.ui.media.MediaList
+import com.bsrubacky.tapeeater.ui.media.MediaListScreen
 import com.bsrubacky.tapeeater.ui.TapeEaterTheme
 
 class MainActivity : ComponentActivity() {

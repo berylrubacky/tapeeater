@@ -7,7 +7,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.bsrubacky.tapeeater.database.TapeEaterDatabase
 import com.bsrubacky.tapeeater.database.entities.Media
-import com.bsrubacky.tapeeater.ui.MediaDetail
+import com.bsrubacky.tapeeater.ui.media.MediaDetail
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -45,9 +45,9 @@ class MediaDetailViewmodel(application: Application, savedStateHandle: SavedStat
         }
     }
 
-    fun deleteMedia(toDelete: Media) {
+    fun deleteMedia() {
         viewModelScope.launch(Dispatchers.IO) {
-            database.mediaDao().delete(toDelete)
+            database.mediaDao().delete(_media.value)
         }
     }
 }

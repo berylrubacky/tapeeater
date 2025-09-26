@@ -1,4 +1,4 @@
-package com.bsrubacky.tapeeater.ui
+package com.bsrubacky.tapeeater.ui.media
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalSharedTransitionApi
@@ -35,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -78,6 +79,7 @@ fun AddEditMediaDialog(
                                     start.linkTo(parent.start)
                                     end.linkTo(parent.end)
                                 }
+                                    .testTag("add-edit-media-dialog")
                         )
                         Card(
                             modifier = Modifier
@@ -102,6 +104,7 @@ fun AddEditMediaDialog(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(20.dp)
+                                    .testTag("media-name-input")
                             )
                             var type by remember { mutableIntStateOf(media.type) }
                             LazyHorizontalStaggeredGrid(
@@ -126,7 +129,9 @@ fun AddEditMediaDialog(
                                                 stringResource(R.string.vinyl),
                                                 modifier = Modifier.height(20.dp)
                                             )
-                                        })
+                                        },
+                                        modifier = Modifier.testTag("vinyl-button")
+                                    )
                                 }
                                 item {
                                     InputChip(
@@ -140,7 +145,9 @@ fun AddEditMediaDialog(
                                                 stringResource(R.string.cd),
                                                 modifier = Modifier.height(20.dp)
                                             )
-                                        })
+                                        },
+                                        modifier = Modifier.testTag("cd-button")
+                                    )
                                 }
                                 item {
                                     InputChip(
@@ -154,7 +161,9 @@ fun AddEditMediaDialog(
                                                 stringResource(R.string.minidisc),
                                                 modifier = Modifier.height(20.dp)
                                             )
-                                        })
+                                        },
+                                        modifier = Modifier.testTag("minidisc-button")
+                                    )
                                 }
                                 item {
                                     InputChip(
@@ -168,7 +177,9 @@ fun AddEditMediaDialog(
                                                 stringResource(R.string.cassette),
                                                 modifier = Modifier.height(20.dp)
                                             )
-                                        })
+                                        },
+                                        modifier = Modifier.testTag("cassette-button")
+                                    )
                                 }
                             }
                             Row(
@@ -180,7 +191,8 @@ fun AddEditMediaDialog(
                                     {
                                         keyboardController?.hide()
                                         onDismissRequest()
-                                    }
+                                    },
+                                    modifier = Modifier.testTag("cancel-button")
                                 ) { Text(stringResource(R.string.cancel)) }
                                 TextButton(
                                     {
@@ -190,7 +202,8 @@ fun AddEditMediaDialog(
                                         onSave(media)
                                     },
                                     enabled = (type != -1 && !textFieldState.text.toString()
-                                        .isEmpty())
+                                        .isEmpty()),
+                                    modifier = Modifier.testTag("save-button")
                                 ) { Text(stringResource(R.string.save)) }
                             }
 

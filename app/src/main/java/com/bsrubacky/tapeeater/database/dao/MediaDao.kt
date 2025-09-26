@@ -26,6 +26,9 @@ interface MediaDao {
     @Query("SELECT * FROM Media WHERE Id = :mediaId")
     fun select(mediaId: Long): Media
 
+    @Query("SELECT * FROM Media")
+    fun selectAll():List<Media>
+
     @Query("SELECT * FROM Media WHERE Name LIKE :searchString AND Type LIKE :filter ORDER BY Name ASC")
     fun searchAlphaAscending(searchString: String, filter: String): PagingSource<Int, Media>
 
