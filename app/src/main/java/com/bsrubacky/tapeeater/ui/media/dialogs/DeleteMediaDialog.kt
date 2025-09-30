@@ -1,4 +1,4 @@
-package com.bsrubacky.tapeeater.ui.media
+package com.bsrubacky.tapeeater.ui.media.dialogs
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalSharedTransitionApi
@@ -30,14 +30,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.bsrubacky.tapeeater.R
-import com.bsrubacky.tapeeater.database.entities.Media
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-fun DeleteMediaDialog(
-    media: Media,
+fun DeleteDialog(
+    name: String,
+    type: Int,
     onDismissRequest: () -> Unit,
-    onConfirm: (Media) -> Unit,
+    onConfirm: () -> Unit,
     sharedTransitionScope: SharedTransitionScope,
     isVisible: Boolean
 ) {
@@ -45,11 +45,11 @@ fun DeleteMediaDialog(
         AnimatedContent(
             targetState = isVisible,
             transitionSpec = { fadeIn() togetherWith fadeOut() },
-            label = "MediaEditDetails"
+            label = "DeletePrompt"
         ) { visible ->
             Box(Modifier.fillMaxSize()) {
                 if (visible) {
-                    ConstraintLayout (Modifier.testTag("delete-dialog")){
+                    ConstraintLayout(Modifier.testTag("delete-dialog")) {
                         val (dialog, scrim) = createRefs()
                         Box(
                             modifier = Modifier
@@ -80,8 +80,20 @@ fun DeleteMediaDialog(
                                     end.linkTo(parent.end)
                                 }
                         ) {
-                            Text(stringResource(R.string.delete_dialog_title), fontSize = 25.sp, modifier = Modifier.padding(20.dp))
-                            Text(stringResource(R.string.delete_dialog_prompt,media.name),modifier = Modifier.padding(start = 20.dp,end=20.dp))
+                            val title = when (type) {
+                                0 -> stringResource(R.string.delete_media_title)
+                                1 -> stringResource(R.string.delete_track_title)
+                                else -> stringResource(R.string.delete_media_title)
+                            }
+                            Text(
+                                title,
+                                fontSize = 25.sp,
+                                modifier = Modifier.padding(20.dp)
+                            )
+                            Text(
+                                stringResource(R.string.delete_dialog_prompt, name),
+                                modifier = Modifier.padding(start = 20.dp, end = 20.dp)
+                            )
                             Row(
                                 Modifier
                                     .align(Alignment.End)
@@ -95,7 +107,7 @@ fun DeleteMediaDialog(
                                 ) { Text(stringResource(R.string.cancel)) }
                                 TextButton(
                                     {
-                                        onConfirm(media)
+                                        onConfirm()
                                     },
                                     Modifier.testTag("delete-confirm-button")
                                 ) { Text(stringResource(R.string.delete)) }
@@ -111,8 +123,17 @@ fun DeleteMediaDialog(
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 @Preview
-fun DeleteMediaDialogPreview(){
+fun DeleteMediaDialogPreview() {
     SharedTransitionLayout {
-        DeleteMediaDialog(media = Media(1,"Wolfpack",2),{},{},this@SharedTransitionLayout,true)
+        DeleteDialog("Wolfpack", 0, {}, {}, this@SharedTransitionLayout, true)
+    }
+}
+
+@OptIn(ExperimentalSharedTransitionApi::class)
+@Composable
+@Preview
+fun DeleteTrackDialogPreview() {
+    SharedTransitionLayout {
+        DeleteDialog("Challenger", 1, {}, {}, this@SharedTransitionLayout, true)
     }
 }

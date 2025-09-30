@@ -9,13 +9,16 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
-import androidx.compose.ui.test.printToLog
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.paging.PagingData
+import androidx.paging.compose.collectAsLazyPagingItems
 import com.bsrubacky.tapeeater.database.entities.Media
+import com.bsrubacky.tapeeater.database.entities.Track
 import com.bsrubacky.tapeeater.ui.media.MediaDetail
 import com.bsrubacky.tapeeater.ui.media.MediaDetailContent
+import kotlinx.coroutines.flow.flowOf
 import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
@@ -29,16 +32,24 @@ class MediaDetailScreenTests {
     fun test_display_media(){
         val media = Media(0,"Test",0)
         composeTestRule.setContent {
+            val lazyPagingItems = flowOf(
+                PagingData.from(
+                    listOf<Track>(
+                    )
+                ),
+            ).collectAsLazyPagingItems()
             val navController = rememberNavController()
             SharedTransitionLayout {
                 NavHost(navController, startDestination = MediaDetail(0)) {
                     composable<MediaDetail> {
                         MediaDetailContent(media,
                             false,
-                            false,
+                            0,
+                            lazyPagingItems,
                             {},
                             {},
                             {media->},
+                            {id,mediaId->},
                             this@SharedTransitionLayout,
                             this@composable) { }
                     }
@@ -59,16 +70,24 @@ class MediaDetailScreenTests {
         val media = Media(0,"Test",0)
         var returnedMedia:Media? = null
         composeTestRule.setContent {
+            val lazyPagingItems = flowOf(
+                PagingData.from(
+                    listOf<Track>(
+                    )
+                ),
+            ).collectAsLazyPagingItems()
             val navController = rememberNavController()
             SharedTransitionLayout {
                 NavHost(navController, startDestination = MediaDetail(0)) {
                     composable<MediaDetail> {
                         MediaDetailContent(media,
                             false,
-                            false,
+                            0,
+                            lazyPagingItems,
                             {},
                             {},
                             {media-> returnedMedia = media},
+                            {id,mediaId->},
                             this@SharedTransitionLayout,
                             this@composable) { }
                     }
@@ -92,16 +111,24 @@ class MediaDetailScreenTests {
         val media = Media(0,"Test",0)
         var triggeredDelete = false
         composeTestRule.setContent {
+            val lazyPagingItems = flowOf(
+                PagingData.from(
+                    listOf<Track>(
+                    )
+                ),
+            ).collectAsLazyPagingItems()
             val navController = rememberNavController()
             SharedTransitionLayout {
                 NavHost(navController, startDestination = MediaDetail(0)) {
                     composable<MediaDetail> {
                         MediaDetailContent(media,
                             false,
-                            false,
+                            0,
+                            lazyPagingItems,
                             {},
                             {triggeredDelete = true},
                             {media->},
+                            {id,mediaId->},
                             this@SharedTransitionLayout,
                             this@composable) { }
                     }
