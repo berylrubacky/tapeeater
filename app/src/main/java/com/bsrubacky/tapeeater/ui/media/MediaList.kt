@@ -11,13 +11,10 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkOut
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -28,11 +25,9 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -44,24 +39,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.paging.LoadState
-import androidx.paging.LoadStates
 import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.bsrubacky.tapeeater.R
 import com.bsrubacky.tapeeater.database.entities.Media
 import com.bsrubacky.tapeeater.ui.TapeEaterTheme
+import com.bsrubacky.tapeeater.ui.media.dialogs.AddEditMediaDialog
+import com.bsrubacky.tapeeater.ui.media.listitems.MediaItem
 import com.bsrubacky.tapeeater.ui.menu.FilterItem
 import com.bsrubacky.tapeeater.ui.menu.SortItem
 import com.bsrubacky.tapeeater.viewmodels.MediaListViewmodel
@@ -76,7 +68,7 @@ object MediaList
 @Composable
 fun MediaListScreen(
     sharedTransitionScope: SharedTransitionScope,
-    animatedContentScope: AnimatedVisibilityScope,
+    animatedVisibilityScope: AnimatedVisibilityScope,
     navToDetail: (Long) -> Unit
 ) {
 
@@ -96,7 +88,7 @@ fun MediaListScreen(
         viewmodel::onSortChange,
         viewmodel::addMedia,
         sharedTransitionScope,
-        animatedContentScope,
+        animatedVisibilityScope,
         navToDetail
         )
 }
@@ -113,7 +105,7 @@ fun MediaListContent(
     onSortChange: (Int) -> Unit,
     addMedia: (Media) -> Unit,
     sharedTransitionScope: SharedTransitionScope,
-    animatedContentScope: AnimatedVisibilityScope,
+    animatedVisibilityScope: AnimatedVisibilityScope,
     navToDetail: (Long) -> Unit
 ){
 
@@ -364,99 +356,13 @@ fun MediaListContent(
                 verticalArrangement = Arrangement.spacedBy(2.dp),
                 modifier = Modifier.testTag("media-list"))
             {
-                item {
-                    HorizontalDivider()
+                if(mediaList.itemCount>0){
+                    item {
+                        HorizontalDivider()
+                    }
                 }
                 items(mediaList.itemCount, key = { mediaList[it]!!.id }) { index ->
-                    val media = mediaList[index]!!
-                    val icon = when (media.type) {
-                        0 -> R.drawable.vinyl
-                        1 -> R.drawable.cassette
-                        2 -> R.drawable.cd
-                        3 -> R.drawable.minidisc
-                        else -> R.drawable.cd
-                    }
-                    val iconName = when (media.type) {
-                        0 -> R.string.vinyl
-                        1 -> R.string.cassette
-                        2 -> R.string.cd
-                        3 -> R.string.minidisc
-                        else -> R.drawable.cd
-                    }
-                    ConstraintLayout(
-                        Modifier
-                            .fillMaxWidth()
-                            .height(45.dp)
-                            .animateItem()
-                    ) {
-                        with(sharedTransitionScope) {
-                            val (click, scrobble, divider) = createRefs()
-                            ConstraintLayout(
-                                Modifier
-                                    .background(MaterialTheme.colorScheme.background)
-                                    .clickable {
-                                        navToDetail(media.id)
-                                    }
-                                    .sharedBounds(
-                                        sharedTransitionScope.rememberSharedContentState(key = "box-${media.id}"),
-                                        animatedContentScope
-                                    )
-                                    .constrainAs(click) {
-                                        start.linkTo(parent.start)
-                                        end.linkTo(scrobble.start)
-                                    }
-                                    .fillMaxWidth(.85f)
-                                    .testTag("media-item")
-                            ) {
-                                val (image, name) = createRefs()
-                                Icon(
-                                    painterResource(icon),
-                                    stringResource(iconName),
-                                    modifier = Modifier
-                                        .sharedElement(
-                                            sharedTransitionScope.rememberSharedContentState(key = "image-${media.id}"),
-                                            animatedContentScope
-                                        )
-                                        .constrainAs(image) {
-                                            top.linkTo(parent.top)
-                                            bottom.linkTo(parent.bottom)
-                                            start.linkTo(parent.start)
-                                        },
-                                    tint = MaterialTheme.colorScheme.primary,
-
-                                    )
-                                Text(
-                                    text = media.name,
-                                    modifier = Modifier
-                                        .fillMaxWidth(.85f)
-                                        .sharedElement(
-                                            sharedTransitionScope.rememberSharedContentState(key = "name-${media.id}"),
-                                            animatedContentScope
-                                        )
-                                        .constrainAs(name) {
-                                            top.linkTo(parent.top)
-                                            bottom.linkTo(parent.bottom)
-                                            start.linkTo(image.end)
-                                            end.linkTo(parent.end)
-                                        },
-                                    overflow = TextOverflow.Ellipsis,
-                                    textAlign = TextAlign.Center,
-                                    fontSize = 23.sp,
-                                    lineHeight = 23.sp
-                                )
-                            }
-                            IconButton(
-                                onClick = {}, modifier = Modifier
-                                    .constrainAs(scrobble) {
-                                        end.linkTo(parent.end)
-                                    }) {
-                                Icon(painterResource(R.drawable.button_upload), "Scrobble")
-                            }
-                            HorizontalDivider(modifier = Modifier.constrainAs(divider) {
-                                top.linkTo(click.bottom)
-                            })
-                        }
-                    }
+                    MediaItem(mediaList[index]!!, sharedTransitionScope, animatedVisibilityScope, navToDetail)
                 }
             }
         }

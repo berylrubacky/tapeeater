@@ -16,12 +16,12 @@ import androidx.room.PrimaryKey
     ]
 )
 data class Track(
-    @PrimaryKey(true) val id:Int,
-    @ColumnInfo("Media") val mediaId:Int,
-    @ColumnInfo("Name") val name: String,
-    @ColumnInfo("Artist") val artist: String,
-    @ColumnInfo("Album") val album: String,
-    @ColumnInfo("Album_Artist") val albumArtist: String,
-    @ColumnInfo("Length") val length: Long,
-    @ColumnInfo("Position") val position:Int
+    @PrimaryKey(true) val id:Long,
+    @ColumnInfo("Media") val mediaId:Long,
+    @ColumnInfo("Name") var name: String,
+    @ColumnInfo("Artist") var artist: String,
+    @ColumnInfo("Album") var album: String,
+    @ColumnInfo("Album_Artist") var albumArtist: String,
+    @ColumnInfo("Length") var length: Long,
+    @ColumnInfo("Position") var position:Int
 )

@@ -1,4 +1,4 @@
-package com.bsrubacky.tapeeater.ui.media
+package com.bsrubacky.tapeeater.ui.media.dialogs
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalSharedTransitionApi
@@ -11,14 +11,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.staggeredgrid.LazyHorizontalStaggeredGrid
-import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
@@ -63,7 +62,7 @@ fun AddEditMediaDialog(
         ) { visible ->
             Box(Modifier.fillMaxSize()) {
                 if (visible) {
-                    ConstraintLayout {
+                    ConstraintLayout(modifier = Modifier.testTag("add-edit-media-dialog")) {
                         val (dialog, scrim) = createRefs()
                         Box(
                             modifier = Modifier
@@ -79,7 +78,6 @@ fun AddEditMediaDialog(
                                     start.linkTo(parent.start)
                                     end.linkTo(parent.end)
                                 }
-                                    .testTag("add-edit-media-dialog")
                         )
                         Card(
                             modifier = Modifier
@@ -96,7 +94,8 @@ fun AddEditMediaDialog(
                                     start.linkTo(parent.start)
                                     end.linkTo(parent.end)
                                 }
-                        ) {
+                        )
+                        {
                             val textFieldState = rememberTextFieldState(media.name)
                             TextField(
                                 textFieldState,
@@ -107,17 +106,12 @@ fun AddEditMediaDialog(
                                     .testTag("media-name-input")
                             )
                             var type by remember { mutableIntStateOf(media.type) }
-                            LazyHorizontalStaggeredGrid(
-                                rows = StaggeredGridCells.FixedSize(30.dp),
-                                verticalArrangement = Arrangement.SpaceAround,
-                                horizontalItemSpacing = 5.dp,
+                            FlowRow(
+                                horizontalArrangement = Arrangement.Center,
                                 modifier = Modifier
-                                    .fillMaxWidth(.8f)
-                                    .height(90.dp)
-                                    .padding(start = 20.dp, end = 20.dp)
                                     .align(Alignment.CenterHorizontally)
                             ) {
-                                item {
+                                Box(Modifier.padding(start = 5.dp, end = 5.dp)) {
                                     InputChip(
                                         onClick = {
                                             type = 0
@@ -133,7 +127,23 @@ fun AddEditMediaDialog(
                                         modifier = Modifier.testTag("vinyl-button")
                                     )
                                 }
-                                item {
+                                Box(Modifier.padding(start = 5.dp, end = 5.dp)) {
+                                    InputChip(
+                                        onClick = {
+                                            type = 1
+                                        }, selected = (type == 1),
+                                        label = { Text(stringResource(R.string.cassette)) },
+                                        avatar = {
+                                            Icon(
+                                                painterResource(R.drawable.cassette),
+                                                stringResource(R.string.cassette),
+                                                modifier = Modifier.height(20.dp)
+                                            )
+                                        },
+                                        modifier = Modifier.testTag("cassette-button")
+                                    )
+                                }
+                                Box(Modifier.padding(start = 5.dp, end = 5.dp)) {
                                     InputChip(
                                         onClick = {
                                             type = 2
@@ -149,7 +159,7 @@ fun AddEditMediaDialog(
                                         modifier = Modifier.testTag("cd-button")
                                     )
                                 }
-                                item {
+                                Box(Modifier.padding(start = 5.dp, end = 5.dp)) {
                                     InputChip(
                                         onClick = {
                                             type = 3
@@ -163,22 +173,6 @@ fun AddEditMediaDialog(
                                             )
                                         },
                                         modifier = Modifier.testTag("minidisc-button")
-                                    )
-                                }
-                                item {
-                                    InputChip(
-                                        onClick = {
-                                            type = 1
-                                        }, selected = (type == 1),
-                                        label = { Text(stringResource(R.string.cassette)) },
-                                        avatar = {
-                                            Icon(
-                                                painterResource(R.drawable.cassette),
-                                                stringResource(R.string.cassette),
-                                                modifier = Modifier.height(20.dp)
-                                            )
-                                        },
-                                        modifier = Modifier.testTag("cassette-button")
                                     )
                                 }
                             }
@@ -218,7 +212,7 @@ fun AddEditMediaDialog(
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 @Preview
-fun AddEditMediaDialogPreview() {
+private fun AddEditMediaDialogPreview() {
     SharedTransitionLayout {
         AddEditMediaDialog(
             media = Media(1, "Wolfpack", 2),

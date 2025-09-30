@@ -20,7 +20,16 @@
 
     <!--Dialog Strings-->
     <string name="media_name">Media Name</string>
-    <string name="delete_dialog_title">Delete Media?</string>
+    <string name="track_name">Track Name</string>
+    <string name="add_track">Add Track</string>
+    <string name="edit_track">Edit Track</string>
+    <string name="position">Position</string>
+    <string name="positions">Position (1-"%1$d")</string>
+    <string name="artist">Artist</string>
+    <string name="album">Album</string>
+    <string name="album_artist">Album Artist</string>
+    <string name="delete_media_title">Delete Media?</string>
+    <string name="delete_track_title">Delete Track?</string>
     <string name="delete_dialog_prompt">If you delete "%1$s" it will disappear forever.</string>
     <string name="cancel">Cancel</string>
     <string name="save">Save</string>

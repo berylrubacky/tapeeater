@@ -13,6 +13,8 @@ import com.bsrubacky.tapeeater.ui.media.MediaDetailScreen
 import com.bsrubacky.tapeeater.ui.media.MediaList
 import com.bsrubacky.tapeeater.ui.media.MediaListScreen
 import com.bsrubacky.tapeeater.ui.TapeEaterTheme
+import com.bsrubacky.tapeeater.ui.media.AddEditTrackDialog
+import com.bsrubacky.tapeeater.ui.media.AddEditTrackDialogScreen
 
 class MainActivity : ComponentActivity() {
 
@@ -26,11 +28,26 @@ class MainActivity : ComponentActivity() {
                     val navController = rememberNavController()
                     NavHost(navController = navController, startDestination = MediaList) {
                         composable<MediaList> {
-                            MediaListScreen(this@SharedTransitionLayout,this@composable) { id ->
+                            MediaListScreen(
+                                this@SharedTransitionLayout,
+                                this@composable)
+                            { id ->
                                 navController.navigate(MediaDetail(id = id))
                             }
                         }
-                        composable<MediaDetail> { MediaDetailScreen(this@SharedTransitionLayout,this@composable) { navController.popBackStack() } }
+                        composable<MediaDetail> {
+                            MediaDetailScreen(
+                                this@SharedTransitionLayout,
+                                this@composable,
+                                {id, mediaId ->
+                                    navController.navigate(AddEditTrackDialog(id, mediaId))
+                                })
+                            { navController.popBackStack() }
+                        }
+                        composable<AddEditTrackDialog> {
+                            AddEditTrackDialogScreen(this@SharedTransitionLayout)
+                            {navController.popBackStack()}
+                        }
                     }
                 }
             }
