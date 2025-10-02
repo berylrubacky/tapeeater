@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -15,9 +17,27 @@ android {
         minSdk = 24
         targetSdk = 35
         versionCode = 1
-        versionName = "1.0"
+        versionName = "1.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        val keystoreFile = project.rootProject.file("apikey.properties")
+        val properties = Properties()
+        properties.load(keystoreFile.inputStream())
+
+        val lastFMApiKey = properties.getProperty("lastFM_apiKey")?: ""
+        val lastFMSharedSecret = properties.getProperty("lastFM_sharedSecret")?: ""
+
+        buildConfigField(
+            type = "String",
+            name= "lastFM_apiKey",
+            value = lastFMApiKey
+        )
+        buildConfigField(
+            type = "String",
+            name= "lastFM_sharedSecret",
+            value = lastFMSharedSecret
+        )
     }
 
     buildTypes {
@@ -35,6 +55,7 @@ android {
 
     buildFeatures{
         compose = true
+        buildConfig = true
     }
 }
 
@@ -45,7 +66,6 @@ dependencies {
     val composeBom = platform("androidx.compose:compose-bom:2025.08.00")
     implementation(composeBom)
     androidTestImplementation(composeBom)
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
@@ -64,6 +84,13 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.paging)
     implementation(libs.androidx.paging.compose)
+    implementation(libs.retrofit)
+    implementation(libs.converter.gson)
+    implementation(libs.tikxml.annotation)
+    implementation(libs.tikxml.core)
+    implementation(libs.tikxml.retrofit.converter)
+    implementation(libs.androidx.datastore.preferences)
+    ksp(libs.tikxml.processor)
     ksp(libs.androidx.room.compiler)
     debugImplementation(libs.androidx.ui.tooling)
     androidTestImplementation(libs.androidx.ui.test.junit4)
