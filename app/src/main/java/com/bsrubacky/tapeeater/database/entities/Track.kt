@@ -3,6 +3,7 @@ package com.bsrubacky.tapeeater.database.entities
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.Ignore
 import androidx.room.PrimaryKey
 
 @Entity(
@@ -23,5 +24,6 @@ data class Track(
     @ColumnInfo("Album") var album: String,
     @ColumnInfo("Album_Artist") var albumArtist: String,
     @ColumnInfo("Length") var length: Long,
-    @ColumnInfo("Position") var position:Int
+    @ColumnInfo("Position") var position:Int,
+    @Ignore var timestamp: Long = 0
 )

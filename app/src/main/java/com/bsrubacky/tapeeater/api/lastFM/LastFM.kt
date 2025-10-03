@@ -1,6 +1,7 @@
 package com.bsrubacky.tapeeater.api.lastFM
 
 import com.bsrubacky.tapeeater.api.lastFM.responses.AuthResponse
+import com.bsrubacky.tapeeater.api.lastFM.responses.ScrobbleResponse
 import retrofit2.Response
 import retrofit2.http.FieldMap
 import retrofit2.http.FormUrlEncoded
@@ -14,5 +15,5 @@ interface LastFM {
 
     @FormUrlEncoded
     @POST("/")
-    suspend fun scrobble(@FieldMap field: MutableMap<String, String>)
+    suspend fun scrobble(@FieldMap field: MutableMap<String, String>): Response<ScrobbleResponse>
 }

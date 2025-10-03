@@ -28,13 +28,15 @@ class AuthenticationRequest(val context: Context, username: String, password: St
 
     override suspend fun manageResponse(response: Response<AuthResponse>) {
        val lfm = response.body()
-        if(response.isSuccessful){
-            val session = lfm!!.response as Session
-            context.dataStore.edit { preferences ->
-                preferences[stringPreferencesKey("lastFM_sk")] = session.key
+        if(lfm!= null){
+            if(response.isSuccessful){
+                val session = lfm.response as Session
+                context.dataStore.edit { preferences ->
+                    preferences[stringPreferencesKey("lastFM_sk")] = session.key
+                }
+            }else{
+                val error = lfm.response as Error
             }
-        }else{
-            val error = lfm!!.response as Error
         }
     }
 }
