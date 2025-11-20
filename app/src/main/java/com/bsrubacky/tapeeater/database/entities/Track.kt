@@ -4,10 +4,14 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Ignore
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
 @Entity(
     "Tracks",
+    indices = [
+        Index(value = ["Media"], unique = false)
+              ],
     foreignKeys = [
         ForeignKey(
             entity = Media::class,
@@ -24,6 +28,8 @@ data class Track(
     @ColumnInfo("Album") var album: String,
     @ColumnInfo("Album_Artist") var albumArtist: String,
     @ColumnInfo("Length") var length: Long,
-    @ColumnInfo("Position") var position:Int,
-    @Ignore var timestamp: Long = 0
-)
+    @ColumnInfo("Position") var position:Int
+){
+    @Ignore
+    var timestamp:Long = 0
+}

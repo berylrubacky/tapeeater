@@ -37,5 +37,8 @@ interface TrackDao{
     fun select(trackId: Long): Track
 
     @Query("SELECT * FROM Tracks WHERE Media = :mediaId ORDER BY Position")
-    fun selectAllTracksWithMedia(mediaId: Long): PagingSource<Int, Track>
+    fun selectAllTracksFromMedia(mediaId: Long): List<Track>
+
+    @Query("SELECT * FROM Tracks WHERE Media = :mediaId ORDER BY Position")
+    fun selectAllTracksFromMediaPaging(mediaId: Long): PagingSource<Int, Track>
 }
